@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+@theme {
+  /* PYRGOS FC identity */
+  --color-night: #04070f;
+  --color-navy-950: #060b1d;
+  --color-navy-900: #0a1128;
+  --color-navy-800: #101a3d;
+  --color-navy-700: #182658;
+  --color-navy-600: #22347a;
+  --color-royal: #2b59ff;
+  --color-royal-bright: #5c82ff;
+  --color-royal-deep: #1a3ac2;
+  --color-gold: #f5b841;
+  --color-gold-bright: #ffd376;
+  --color-gold-deep: #c98d1a;
+  --color-mist: #aab6d8;
+  --color-line: rgba(170, 182, 216, 0.14);
+
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-glow-gold: 0 0 40px -8px rgba(245, 184, 65, 0.45);
+  --shadow-glow-royal: 0 0 48px -10px rgba(43, 89, 255, 0.55);
+  --shadow-card: 0 18px 50px -20px rgba(2, 5, 16, 0.9);
+
+  --animate-marquee: marquee 36s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+body {
+  background-color: var(--color-night);
+  color: #f4f6fc;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--color-gold);
+  color: var(--color-night);
+}
+
+/* ---- Utility layers ---------------------------------------------------- */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Glassmorphism panel */
+.glass {
+  background: linear-gradient(
+    150deg,
+    rgba(16, 26, 61, 0.55),
+    rgba(6, 11, 29, 0.65)
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(170, 182, 216, 0.14);
+}
+
+/* Gold gradient headline text */
+.text-gradient-gold {
+  background: linear-gradient(100deg, #ffd376 0%, #f5b841 45%, #e09b22 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-royal {
+  background: linear-gradient(100deg, #8ea8ff 0%, #5c82ff 50%, #2b59ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtle noise texture overlay */
+.noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Stadium light beams */
+.stadium-lights {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.stadium-lights::before,
+.stadium-lights::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  width: 55%;
+  height: 130%;
+  filter: blur(60px);
+  opacity: 0.5;
+}
+
+.stadium-lights::before {
+  left: -12%;
+  background: radial-gradient(
+    ellipse at top left,
+    rgba(43, 89, 255, 0.35),
+    transparent 65%
+  );
+  transform: rotate(12deg);
+}
+
+.stadium-lights::after {
+  right: -12%;
+  background: radial-gradient(
+    ellipse at top right,
+    rgba(245, 184, 65, 0.22),
+    transparent 65%
+  );
+  transform: rotate(-12deg);
+}
+
+/* Diagonal section divider */
+.clip-diagonal {
+  clip-path: polygon(0 0, 100% 4rem, 100% 100%, 0 100%);
+}
+
+.clip-diagonal-bottom {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4rem), 0 100%);
+}
+
+/* Gradient border card */
+.gradient-border {
+  position: relative;
+  background:
+    linear-gradient(var(--color-navy-900), var(--color-navy-900)) padding-box,
+    linear-gradient(140deg, rgba(245, 184, 65, 0.55), rgba(43, 89, 255, 0.4) 55%, rgba(170, 182, 216, 0.12)) border-box;
+  border: 1px solid transparent;
+}
+
+/* Pitch line pattern backdrop */
+.pitch-pattern {
+  background-image:
+    linear-gradient(rgba(170, 182, 216, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(170, 182, 216, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
