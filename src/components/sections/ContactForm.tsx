@@ -6,6 +6,29 @@ import { cn } from "@/lib/utils";
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
 
+export interface ContactFormStrings {
+  name: string;
+  namePlaceholder: string;
+  email: string;
+  emailPlaceholder: string;
+  subject: string;
+  subjectPlaceholder: string;
+  message: string;
+  messagePlaceholder: string;
+  submit: string;
+  submitting: string;
+  successTitle: string;
+  successText: string;
+  sendAnother: string;
+  errorText: string;
+  errName: string;
+  errEmail: string;
+  errEmailInvalid: string;
+  errSubject: string;
+  errMessage: string;
+  errMessageShort: string;
+}
+
 interface FormErrors {
   name?: string;
   email?: string;
@@ -13,26 +36,30 @@ interface FormErrors {
   message?: string;
 }
 
-const inputClasses =
-  "w-full rounded-xl border border-line bg-night/60 px-4 py-3 text-sm text-white placeholder:text-mist/50 transition-colors focus:border-gold/60 focus:outline-none";
+interface ContactFormProps {
+  strings: ContactFormStrings;
+}
 
-export function ContactForm() {
+const inputClasses =
+  "w-full rounded-xl border border-line bg-night/60 px-4 py-3 text-sm text-white placeholder:text-mist/50 transition-colors focus:border-crimson/60 focus:outline-none";
+
+export function ContactForm({ strings }: ContactFormProps) {
   const [status, setStatus] = useState<FormStatus>("idle");
   const [errors, setErrors] = useState<FormErrors>({});
 
   function validate(data: Record<string, string>): FormErrors {
     const next: FormErrors = {};
-    if (!data.name.trim()) next.name = "Please enter your name.";
+    if (!data.name.trim()) next.name = strings.errName;
     if (!data.email.trim()) {
-      next.email = "Please enter your email address.";
+      next.email = strings.errEmail;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      next.email = "Please enter a valid email address.";
+      next.email = strings.errEmailInvalid;
     }
-    if (!data.subject.trim()) next.subject = "Please enter a subject.";
+    if (!data.subject.trim()) next.subject = strings.errSubject;
     if (!data.message.trim()) {
-      next.message = "Please enter a message.";
+      next.message = strings.errMessage;
     } else if (data.message.trim().length < 10) {
-      next.message = "Your message should be at least 10 characters.";
+      next.message = strings.errMessageShort;
     }
     return next;
   }
@@ -74,16 +101,15 @@ export function ContactForm() {
         role="status"
         aria-live="polite"
       >
-        <p className="font-display text-2xl font-extrabold uppercase tracking-wide text-gold">
-          Message Received
+        <p className="font-display text-2xl font-extrabold uppercase tracking-wide text-crimson-bright">
+          {strings.successTitle}
         </p>
         <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-mist">
-          Thank you for reaching out to PYRGOS FC. Our team will get back to you
-          as soon as possible — usually within two working days.
+          {strings.successText}
         </p>
         <div className="mt-8">
           <Button variant="outline" onClick={() => setStatus("idle")}>
-            Send Another Message
+            {strings.sendAnother}
           </Button>
         </div>
       </div>
@@ -98,14 +124,14 @@ export function ContactForm() {
             htmlFor="contact-name"
             className="mb-2 block font-display text-xs font-bold uppercase tracking-[0.18em] text-white/80"
           >
-            Name
+            {strings.name}
           </label>
           <input
             id="contact-name"
             name="name"
             type="text"
             autoComplete="name"
-            placeholder="Your full name"
+            placeholder={strings.namePlaceholder}
             className={cn(inputClasses, errors.name && "border-red-400/70")}
             aria-invalid={Boolean(errors.name)}
             aria-describedby={errors.name ? "contact-name-error" : undefined}
@@ -122,14 +148,14 @@ export function ContactForm() {
             htmlFor="contact-email"
             className="mb-2 block font-display text-xs font-bold uppercase tracking-[0.18em] text-white/80"
           >
-            Email
+            {strings.email}
           </label>
           <input
             id="contact-email"
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder={strings.emailPlaceholder}
             className={cn(inputClasses, errors.email && "border-red-400/70")}
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? "contact-email-error" : undefined}
@@ -147,13 +173,13 @@ export function ContactForm() {
           htmlFor="contact-subject"
           className="mb-2 block font-display text-xs font-bold uppercase tracking-[0.18em] text-white/80"
         >
-          Subject
+          {strings.subject}
         </label>
         <input
           id="contact-subject"
           name="subject"
           type="text"
-          placeholder="What is your message about?"
+          placeholder={strings.subjectPlaceholder}
           className={cn(inputClasses, errors.subject && "border-red-400/70")}
           aria-invalid={Boolean(errors.subject)}
           aria-describedby={errors.subject ? "contact-subject-error" : undefined}
@@ -170,13 +196,13 @@ export function ContactForm() {
           htmlFor="contact-message"
           className="mb-2 block font-display text-xs font-bold uppercase tracking-[0.18em] text-white/80"
         >
-          Message
+          {strings.message}
         </label>
         <textarea
           id="contact-message"
           name="message"
           rows={6}
-          placeholder="Tell us how we can help..."
+          placeholder={strings.messagePlaceholder}
           className={cn(inputClasses, "resize-y", errors.message && "border-red-400/70")}
           aria-invalid={Boolean(errors.message)}
           aria-describedby={errors.message ? "contact-message-error" : undefined}
@@ -189,15 +215,17 @@ export function ContactForm() {
       </div>
 
       {status === "error" && (
-        <p className="mt-6 rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
-          Something went wrong while sending your message. Please try again in a
-          moment.
+        <p
+          className="mt-6 rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+          role="alert"
+        >
+          {strings.errorText}
         </p>
       )}
 
       <div className="mt-8">
-        <Button type="submit" variant="gold" size="lg" disabled={status === "submitting"}>
-          {status === "submitting" ? "Sending..." : "Send Message"}
+        <Button type="submit" variant="crimson" size="lg" disabled={status === "submitting"}>
+          {status === "submitting" ? strings.submitting : strings.submit}
         </Button>
       </div>
     </form>

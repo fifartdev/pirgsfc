@@ -26,14 +26,14 @@ export function SectionHeading({
       {eyebrow && (
         <p
           className={cn(
-            "mb-3 flex items-center gap-3 font-display text-xs font-bold uppercase tracking-[0.28em] text-gold",
+            "mb-3 flex items-center gap-3 font-display text-xs font-bold uppercase tracking-[0.28em] text-crimson-bright",
             align === "center" && "justify-center"
           )}
         >
-          <span className="inline-block h-px w-8 bg-gold/60" aria-hidden="true" />
+          <span className="inline-block h-px w-8 bg-crimson/70" aria-hidden="true" />
           {eyebrow}
           {align === "center" && (
-            <span className="inline-block h-px w-8 bg-gold/60" aria-hidden="true" />
+            <span className="inline-block h-px w-8 bg-crimson/70" aria-hidden="true" />
           )}
         </p>
       )}

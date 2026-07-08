@@ -3,14 +3,22 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarEventCard } from "@/components/cards/CalendarEventCard";
-import { eventTypeLabels } from "@/data/calendar";
-import { cn } from "@/lib/utils";
-import type { CalendarEvent, CalendarEventType } from "@/types";
+import { cn, monthTitle } from "@/lib/utils";
+import type { CalendarEvent, CalendarEventType, Lang } from "@/types";
 
 type Filter = CalendarEventType | "all";
 
 interface CalendarViewProps {
   events: CalendarEvent[];
+  lang: Lang;
+  labels: {
+    all: string;
+    types: Record<CalendarEventType, string>;
+    filterAria: string;
+    noEvents: string;
+    events: string;
+    event: string;
+  };
 }
 
 const filters: Filter[] = [
@@ -24,20 +32,15 @@ const filters: Filter[] = [
 ];
 
 const typeDotColors: Record<CalendarEventType, string> = {
-  match: "bg-gold",
-  training: "bg-royal-bright",
+  match: "bg-crimson-bright",
+  training: "bg-smoke-bright",
   recovery: "bg-emerald-400",
   media: "bg-purple-300",
   community: "bg-orange-300",
   academy: "bg-sky-300",
 };
 
-function monthTitle(dateString: string): string {
-  const date = new Date(`${dateString}T00:00:00`);
-  return date.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-}
-
-export function CalendarView({ events }: CalendarViewProps) {
+export function CalendarView({ events, lang, labels }: CalendarViewProps) {
   const [filter, setFilter] = useState<Filter>("all");
 
   const visible = useMemo(
@@ -58,7 +61,7 @@ export function CalendarView({ events }: CalendarViewProps) {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter events by type">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label={labels.filterAria}>
         {filters.map((f) => (
           <button
             key={f}
@@ -67,19 +70,16 @@ export function CalendarView({ events }: CalendarViewProps) {
             aria-selected={filter === f}
             onClick={() => setFilter(f)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
+              "inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson",
               filter === f
-                ? "bg-gold text-night shadow-glow-gold"
+                ? "bg-crimson text-white shadow-glow-crimson"
                 : "border border-line bg-white/5 text-white/70 hover:text-white"
             )}
           >
             {f !== "all" && (
-              <span
-                className={cn("h-2 w-2 rounded-full", typeDotColors[f])}
-                aria-hidden="true"
-              />
+              <span className={cn("h-2 w-2 rounded-full", typeDotColors[f])} aria-hidden="true" />
             )}
-            {f === "all" ? "All Events" : eventTypeLabels[f]}
+            {f === "all" ? labels.all : labels.types[f]}
           </button>
         ))}
       </div>
@@ -93,23 +93,22 @@ export function CalendarView({ events }: CalendarViewProps) {
           transition={{ duration: 0.3 }}
           className="mt-12 space-y-14"
         >
-          {byMonth.length === 0 && (
-            <p className="text-mist">No events of this type are currently scheduled.</p>
-          )}
+          {byMonth.length === 0 && <p className="text-mist">{labels.noEvents}</p>}
           {byMonth.map(([monthKey, monthEvents]) => (
-            <section key={monthKey} aria-label={monthTitle(monthEvents[0].date)}>
+            <section key={monthKey} aria-label={monthTitle(monthEvents[0].date, lang)}>
               <div className="mb-6 flex items-center gap-4">
                 <h2 className="font-display text-2xl font-extrabold uppercase tracking-wide text-white">
-                  {monthTitle(monthEvents[0].date)}
+                  {monthTitle(monthEvents[0].date, lang)}
                 </h2>
                 <span className="h-px flex-1 bg-line" aria-hidden="true" />
                 <span className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-mist">
-                  {monthEvents.length} event{monthEvents.length === 1 ? "" : "s"}
+                  {monthEvents.length}{" "}
+                  {monthEvents.length === 1 ? labels.event : labels.events}
                 </span>
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 {monthEvents.map((event) => (
-                  <CalendarEventCard key={event.id} event={event} />
+                  <CalendarEventCard key={event.id} event={event} lang={lang} />
                 ))}
               </div>
             </section>

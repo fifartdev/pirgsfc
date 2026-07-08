@@ -5,10 +5,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Crest } from "@/components/ui/Crest";
 import { MobileNav } from "@/components/layout/MobileNav";
-import { NAV_LINKS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import type { Lang } from "@/types";
 
-export function Header() {
+export interface NavEntry {
+  href: string;
+  label: string;
+}
+
+interface HeaderProps {
+  lang: Lang;
+  navEntries: NavEntry[];
+  matchdayLabel: string;
+  estLabel: string;
+  tagline: string;
+  menuOpenLabel: string;
+  menuCloseLabel: string;
+  languageLabel: string;
+}
+
+export function Header({
+  lang,
+  navEntries,
+  matchdayLabel,
+  estLabel,
+  tagline,
+  menuOpenLabel,
+  menuCloseLabel,
+  languageLabel,
+}: HeaderProps) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
@@ -19,8 +44,14 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const homeHref = `/${lang}`;
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+    href === homeHref ? pathname === homeHref : pathname.startsWith(href);
+
+  // Swap the locale prefix while keeping the rest of the path.
+  const otherLang: Lang = lang === "el" ? "en" : "el";
+  const switchHref =
+    pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${otherLang}`) || `/${otherLang}`;
 
   return (
     <header
@@ -32,41 +63,39 @@ export function Header() {
       )}
     >
       <nav
-        className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+        className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8"
         aria-label="Main navigation"
       >
         <Link
-          href="/"
-          className="group flex items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+          href={homeHref}
+          className="group flex items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-crimson"
         >
           <Crest size="sm" />
           <span className="flex flex-col leading-none">
-            <span className="font-display text-lg font-extrabold uppercase tracking-wide text-white transition-colors group-hover:text-gold-bright">
-              Pyrgos FC
+            <span className="font-display text-lg font-extrabold uppercase tracking-wide text-white transition-colors group-hover:text-crimson-bright">
+              Pyrgos AFC
             </span>
-            <span className="mt-0.5 font-display text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-gold/80">
-              Est. 2026
+            <span className="mt-0.5 font-display text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-crimson-bright/90">
+              {estLabel}
             </span>
           </span>
         </Link>
 
-        <ul className="hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <li key={link.href}>
+        <ul className="hidden items-center gap-0.5 xl:flex">
+          {navEntries.map((entry) => (
+            <li key={entry.href}>
               <Link
-                href={link.href}
+                href={entry.href}
                 className={cn(
-                  "relative rounded-full px-4 py-2 font-display text-[0.8rem] font-semibold uppercase tracking-widest transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
-                  isActive(link.href)
-                    ? "text-gold"
-                    : "text-white/75 hover:text-white"
+                  "relative rounded-full px-3 py-2 font-display text-[0.78rem] font-semibold uppercase tracking-widest transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson",
+                  isActive(entry.href) ? "text-crimson-bright" : "text-white/75 hover:text-white"
                 )}
-                aria-current={isActive(link.href) ? "page" : undefined}
+                aria-current={isActive(entry.href) ? "page" : undefined}
               >
-                {link.label}
-                {isActive(link.href) && (
+                {entry.label}
+                {isActive(entry.href) && (
                   <span
-                    className="absolute inset-x-4 -bottom-0.5 h-0.5 rounded-full bg-gold"
+                    className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-crimson"
                     aria-hidden="true"
                   />
                 )}
@@ -75,16 +104,33 @@ export function Header() {
           ))}
         </ul>
 
-        <div className="hidden lg:block">
+        <div className="hidden items-center gap-3 xl:flex">
           <Link
-            href="/matches"
-            className="inline-flex items-center rounded-full bg-gold px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-night transition-all duration-300 hover:bg-gold-bright hover:shadow-glow-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+            href={switchHref}
+            className="inline-flex items-center rounded-full border border-line px-3.5 py-2 font-display text-xs font-bold uppercase tracking-widest text-white/80 transition-colors hover:border-crimson/60 hover:text-crimson-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson"
+            aria-label={`${languageLabel}: ${otherLang === "el" ? "Ελληνικά" : "English"}`}
           >
-            Matchday
+            {otherLang.toUpperCase()}
+          </Link>
+          <Link
+            href={`/${lang}/matches`}
+            className="inline-flex items-center rounded-full bg-crimson px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:bg-crimson-bright hover:shadow-glow-crimson focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson"
+          >
+            {matchdayLabel}
           </Link>
         </div>
 
-        <MobileNav pathname={pathname} />
+        <MobileNav
+          pathname={pathname}
+          lang={lang}
+          navEntries={navEntries}
+          matchdayLabel={matchdayLabel}
+          tagline={tagline}
+          switchHref={switchHref}
+          otherLangLabel={otherLang === "el" ? "Ελληνικά" : "English"}
+          menuOpenLabel={menuOpenLabel}
+          menuCloseLabel={menuCloseLabel}
+        />
       </nav>
     </header>
   );

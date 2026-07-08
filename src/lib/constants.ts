@@ -1,45 +1,59 @@
+import type { Lang, LocalizedText } from "@/types";
+
 export const CLUB = {
-  name: "PYRGOS FC",
-  shortName: "PFC",
+  name: "PYRGOS AFC",
+  shortName: "PAFC",
   founded: 2026,
-  tagline: "Built on Passion. Driven by Glory.",
-  supportingLines: [
-    "The Pride of Pyrgos",
-    "One City. One Team. One Dream.",
-    "Where tradition meets ambition.",
-    "More than a club. A movement.",
-  ],
-  statement:
-    "PYRGOS FC is built on the belief that football can unite a city, inspire a generation, and create moments that live forever.",
   stadium: {
-    name: "Pyrgos Stadium",
-    capacity: "12,500",
-    address: "1 Tower Hill Avenue, Pyrgos",
+    name: { el: "Στάδιο Πύργου", en: "Pyrgos Stadium" } satisfies LocalizedText,
+    capacity: "12.500",
     opened: 2026,
   },
   contact: {
-    email: "hello@pyrgosfc.com",
+    email: "hello@pyrgosafc.com",
     phone: "+30 26210 00000",
-    address: "1 Tower Hill Avenue, Pyrgos, Greece",
+    address: {
+      el: "Λεωφόρος Πύργου 1, Πύργος",
+      en: "1 Tower Hill Avenue, Pyrgos, Greece",
+    } satisfies LocalizedText,
   },
 } as const;
 
-export const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Club", href: "/about" },
-  { label: "Matches", href: "/matches" },
-  { label: "Calendar", href: "/calendar" },
-  { label: "Roster", href: "/roster" },
-  { label: "Staff", href: "/staff" },
-  { label: "News", href: "/news" },
-  { label: "Contact", href: "/contact" },
+/** Primary navigation: the five club sections plus supporting pages. */
+export const NAV_ITEMS = [
+  { key: "home", path: "/" },
+  { key: "news", path: "/news" },
+  { key: "men", path: "/men" },
+  { key: "women", path: "/women" },
+  { key: "futsal", path: "/futsal" },
+  { key: "academy", path: "/academy" },
+  { key: "club", path: "/about" },
+  { key: "contact", path: "/contact" },
+] as const;
+
+export type NavKey = (typeof NAV_ITEMS)[number]["key"];
+
+export const FOOTER_EXTRA_PATHS = [
+  { key: "fixtures", path: "/matches" },
+  { key: "calendar", path: "/calendar" },
+  { key: "staff", path: "/staff" },
 ] as const;
 
 export const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com", handle: "@pyrgosfc" },
-  { label: "X / Twitter", href: "https://x.com", handle: "@pyrgosfc" },
-  { label: "YouTube", href: "https://youtube.com", handle: "PYRGOS FC TV" },
-  { label: "Facebook", href: "https://facebook.com", handle: "PYRGOS FC" },
+  { label: "Instagram", href: "https://instagram.com", handle: "@pyrgosafc" },
+  { label: "X / Twitter", href: "https://x.com", handle: "@pyrgosafc" },
+  { label: "YouTube", href: "https://youtube.com", handle: "PYRGOS AFC TV" },
+  { label: "Facebook", href: "https://facebook.com", handle: "PYRGOS AFC" },
 ] as const;
 
-export const SITE_URL = "https://pyrgosfc.example.com";
+export const SITE_URL = "https://pyrgosafc.example.com";
+
+export const DEPARTMENT_PATHS: Record<"men" | "women" | "futsal", string> = {
+  men: "/men",
+  women: "/women",
+  futsal: "/futsal",
+};
+
+export function departmentPath(department: "men" | "women" | "futsal", lang: Lang): string {
+  return `/${lang}${DEPARTMENT_PATHS[department]}`;
+}

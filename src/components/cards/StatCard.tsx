@@ -3,11 +3,11 @@ import { cn } from "@/lib/utils";
 interface StatCardProps {
   value: string;
   label: string;
-  accent?: "gold" | "royal";
+  accent?: "crimson" | "smoke";
   className?: string;
 }
 
-export function StatCard({ value, label, accent = "gold", className }: StatCardProps) {
+export function StatCard({ value, label, accent = "crimson", className }: StatCardProps) {
   return (
     <div
       className={cn(
@@ -18,14 +18,14 @@ export function StatCard({ value, label, accent = "gold", className }: StatCardP
       <span
         className={cn(
           "absolute left-1/2 top-0 h-1 w-16 -translate-x-1/2 rounded-b-full",
-          accent === "gold" ? "bg-gold" : "bg-royal"
+          accent === "crimson" ? "bg-crimson" : "bg-smoke"
         )}
         aria-hidden="true"
       />
       <p
         className={cn(
           "font-display text-4xl font-extrabold tabular-nums sm:text-5xl",
-          accent === "gold" ? "text-gradient-gold" : "text-gradient-royal"
+          accent === "crimson" ? "text-gradient-crimson" : "text-gradient-smoke"
         )}
       >
         {value}

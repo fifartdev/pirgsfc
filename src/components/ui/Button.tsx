@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type ButtonVariant = "gold" | "royal" | "outline" | "ghost";
+type ButtonVariant = "crimson" | "smoke" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps {
@@ -17,11 +17,11 @@ interface ButtonProps {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  gold: "bg-gold text-night hover:bg-gold-bright shadow-glow-gold hover:shadow-glow-gold font-semibold",
-  royal:
-    "bg-royal text-white hover:bg-royal-bright shadow-glow-royal hover:shadow-glow-royal font-semibold",
+  crimson: "bg-crimson text-white hover:bg-crimson-bright shadow-glow-crimson hover:shadow-glow-crimson font-semibold",
+  smoke:
+    "bg-smoke text-night hover:bg-smoke-bright shadow-glow-smoke hover:shadow-glow-smoke font-semibold",
   outline:
-    "border border-line bg-transparent text-white hover:border-gold/60 hover:text-gold-bright",
+    "border border-line bg-transparent text-white hover:border-crimson/60 hover:text-crimson-bright",
   ghost: "bg-white/5 text-white hover:bg-white/10",
 };
 
@@ -34,7 +34,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 export function Button({
   children,
   href,
-  variant = "gold",
+  variant = "crimson",
   size = "md",
   className,
   type = "button",
@@ -43,7 +43,7 @@ export function Button({
   ariaLabel,
 }: ButtonProps) {
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-full font-display uppercase tracking-wider transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-50",
+    "inline-flex items-center justify-center gap-2 rounded-full font-display uppercase tracking-wider transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson disabled:cursor-not-allowed disabled:opacity-50",
     variantClasses[variant],
     sizeClasses[size],
     className

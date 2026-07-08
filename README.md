@@ -1,9 +1,11 @@
-# PYRGOS FC — Official Club Website
+# PYRGOS AFC — Official Club Website
 
-> Built on Passion. Driven by Glory.
+> Χτισμένη με Πάθος. Ταγμένη στη Δόξα. · Built on Passion. Driven by Glory.
 
-The official digital home of **PYRGOS FC**, a fictional modern football club.
-Built with Next.js (App Router), TypeScript, Tailwind CSS v4, and Framer Motion.
+The official digital home of **PYRGOS AFC**, a fictional modern football club.
+Fully bilingual (Greek primary, English secondary) with a crimson/white
+identity drawn from the club crest. Built with Next.js (App Router),
+TypeScript, Tailwind CSS v4, and Framer Motion.
 
 ## Getting Started
 
@@ -12,7 +14,8 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to
+`/el` (Greek). English lives under `/en`; the header has a language switcher.
 
 Production build:
 
@@ -21,29 +24,34 @@ npm run build
 npm run start
 ```
 
-## Pages
+## Site Structure
+
+All routes are locale-prefixed (`/el/...`, `/en/...`). `src/proxy.ts` redirects
+bare paths to the visitor's language (Greek by default).
 
 | Route | Description |
 | --- | --- |
-| `/` | Cinematic homepage — hero, next match, results, stats, featured players, values, news, sponsors, fan CTA |
-| `/about` | Club story, mission, timeline, values, stadium, community |
-| `/matches` | Match centre with All / Upcoming / Results tabs |
-| `/calendar` | Team calendar with event-type filters (match, training, recovery, media, community, academy) |
-| `/roster` | Full squad with position filters |
-| `/roster/[slug]` | Individual player profiles with season stats |
-| `/staff` | Coaching and technical staff |
-| `/news` | News listing with featured article |
-| `/news/[slug]` | Individual article pages with related stories |
-| `/contact` | Contact form, departments, club details, map placeholder |
+| `/{lang}` | Cinematic homepage — hero, next match, results, stats, departments, featured players, values, news, sponsors, fan CTA |
+| `/{lang}/news` + `/[slug]` | Νέα / Ανακοινώσεις — featured article, grid, bilingual article pages |
+| `/{lang}/men` | Άντρες — men's squad, position filters, fixtures |
+| `/{lang}/women` | Γυναίκες — women's squad and fixtures |
+| `/{lang}/futsal` | Futsal — futsal squad and fixtures |
+| `/{lang}/academy` | Υποδομές — philosophy, age groups (Κ10–Κ19), trials |
+| `/{lang}/about` | Σύλλογος — story, mission, timeline, stadium, community |
+| `/{lang}/matches` | Match centre across all sections, with tabs |
+| `/{lang}/calendar` | Team calendar with event-type filters |
+| `/{lang}/staff` | Coaching and technical staff |
+| `/{lang}/roster/[slug]` | Player profiles (all departments) with season stats |
+| `/{lang}/contact` | Contact form, departments, club details |
 | `POST /api/contact` | Validated placeholder contact endpoint |
 
 ## Architecture
 
-- `src/app` — App Router pages, layout, and the contact API route
-- `src/components` — `layout/`, `sections/`, `cards/`, and `ui/` component groups
-- `src/data` — typed seed data (players, matches, calendar, staff, news, sponsors), structured for easy replacement with a CMS or database
-- `src/types` — shared TypeScript interfaces
-- `src/lib` — utilities and club constants
+- `src/i18n` — typed dictionaries (`el.ts` is the source of truth, `en.ts` mirrors it)
+- `src/data` — bilingual seed data (players across 3 departments, matches, calendar, staff, news, sponsors, academy groups), structured for a future CMS
+- `src/components` — `layout/`, `sections/`, `cards/`, `ui/` (including the SVG `Crest`)
+- `src/types` — shared interfaces (`LocalizedText`, `Department`, ...)
+- `src/proxy.ts` — locale redirect (the Next.js proxy/middleware convention)
 
 ## Email Delivery
 

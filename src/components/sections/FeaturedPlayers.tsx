@@ -3,13 +3,17 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Button } from "@/components/ui/Button";
 import { PlayerCard } from "@/components/cards/PlayerCard";
-import type { Player } from "@/types";
+import { getDict } from "@/i18n";
+import type { Lang, Player } from "@/types";
 
 interface FeaturedPlayersProps {
   players: Player[];
+  lang: Lang;
 }
 
-export function FeaturedPlayers({ players }: FeaturedPlayersProps) {
+export function FeaturedPlayers({ players, lang }: FeaturedPlayersProps) {
+  const dict = getDict(lang);
+
   return (
     <section
       className="noise relative overflow-hidden py-20 sm:py-28"
@@ -25,14 +29,14 @@ export function FeaturedPlayers({ players }: FeaturedPlayersProps) {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <AnimatedReveal>
             <SectionHeading
-              eyebrow="The Badge Carriers"
-              title="Featured Players"
-              description="The names the city chants. The players who carry Pyrgos forward."
+              eyebrow={dict.home.playersEyebrow}
+              title={dict.home.playersTitle}
+              description={dict.home.playersText}
             />
           </AnimatedReveal>
           <AnimatedReveal delay={0.1}>
-            <Button href="/roster" variant="outline">
-              Full Squad
+            <Button href={`/${lang}/men`} variant="outline">
+              {dict.common.fullSquad}
             </Button>
           </AnimatedReveal>
         </div>
@@ -40,7 +44,7 @@ export function FeaturedPlayers({ players }: FeaturedPlayersProps) {
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {players.slice(0, 4).map((player, index) => (
             <AnimatedReveal key={player.slug} delay={index * 0.1}>
-              <PlayerCard player={player} />
+              <PlayerCard player={player} lang={lang} />
             </AnimatedReveal>
           ))}
         </div>

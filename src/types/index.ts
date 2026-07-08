@@ -1,3 +1,10 @@
+export type Lang = "el" | "en";
+
+/** A piece of content available in both site languages. */
+export type LocalizedText = Record<Lang, string>;
+
+export type Department = "men" | "women" | "futsal";
+
 export type PlayerPosition = "Goalkeeper" | "Defender" | "Midfielder" | "Forward";
 
 export type PreferredFoot = "Left" | "Right" | "Both";
@@ -14,17 +21,18 @@ export interface PlayerStats {
 
 export interface Player {
   slug: string;
-  firstName: string;
-  lastName: string;
+  department: Department;
+  firstName: LocalizedText;
+  lastName: LocalizedText;
   number: number;
   position: PlayerPosition;
-  nationality: string;
+  nationality: LocalizedText;
   age: number;
   heightCm: number;
   weightKg: number;
   preferredFoot: PreferredFoot;
   joined: string;
-  bio: string;
+  bio: LocalizedText;
   featured?: boolean;
   captain?: boolean;
   stats: PlayerStats;
@@ -32,21 +40,22 @@ export interface Player {
 
 export type MatchStatus = "upcoming" | "completed" | "live";
 
-export type Competition = "Regional League" | "Cup" | "Friendly";
+export type Competition = "league" | "cup" | "friendly";
 
 export interface Match {
   id: string;
+  department: Department;
   competition: Competition;
-  homeTeam: string;
-  awayTeam: string;
+  homeTeam: LocalizedText;
+  awayTeam: LocalizedText;
+  homeIsPyrgos: boolean;
   homeScore?: number;
   awayScore?: number;
   date: string;
   time: string;
-  venue: string;
+  venue: LocalizedText;
   status: MatchStatus;
-  matchweek?: string;
-  isHome: boolean;
+  matchweek?: LocalizedText;
 }
 
 export type CalendarEventType =
@@ -59,43 +68,43 @@ export type CalendarEventType =
 
 export interface CalendarEvent {
   id: string;
-  title: string;
+  title: LocalizedText;
   type: CalendarEventType;
   date: string;
   startTime: string;
   endTime?: string;
-  location: string;
-  description: string;
+  location: LocalizedText;
+  description: LocalizedText;
 }
 
 export interface StaffMember {
   slug: string;
-  name: string;
-  role: string;
-  bio: string;
+  name: LocalizedText;
+  role: LocalizedText;
+  bio: LocalizedText;
   yearsOfExperience: number;
-  specialty: string;
+  specialty: LocalizedText;
   initials: string;
 }
 
 export type NewsCategory =
-  | "Club News"
-  | "Match Preview"
-  | "Match Report"
-  | "Academy"
-  | "Community"
-  | "Transfers";
+  | "club"
+  | "preview"
+  | "report"
+  | "academy"
+  | "community"
+  | "transfers";
 
 export interface NewsArticle {
   slug: string;
-  title: string;
-  excerpt: string;
+  title: LocalizedText;
+  excerpt: LocalizedText;
   category: NewsCategory;
-  author: string;
+  author: LocalizedText;
   date: string;
   readingTime: number;
   featured?: boolean;
-  content: string[];
+  content: { el: string[]; en: string[] };
 }
 
 export type SponsorTier = "principal" | "official" | "partner";
@@ -104,5 +113,14 @@ export interface Sponsor {
   id: string;
   name: string;
   tier: SponsorTier;
-  tagline: string;
+  tagline: LocalizedText;
+}
+
+export interface AcademyGroup {
+  id: string;
+  name: LocalizedText;
+  ages: LocalizedText;
+  coach: LocalizedText;
+  description: LocalizedText;
+  trainingDays: LocalizedText;
 }

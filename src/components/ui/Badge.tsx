@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 type BadgeVariant =
-  | "gold"
-  | "royal"
+  | "crimson"
+  | "smoke"
   | "outline"
   | "success"
   | "danger"
@@ -15,8 +15,8 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  gold: "bg-gold/15 text-gold-bright border-gold/30",
-  royal: "bg-royal/15 text-royal-bright border-royal/30",
+  crimson: "bg-crimson/15 text-crimson-bright border-crimson/30",
+  smoke: "bg-smoke/15 text-smoke-bright border-smoke/30",
   outline: "bg-transparent text-mist border-line",
   success: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   danger: "bg-red-500/15 text-red-300 border-red-500/30",

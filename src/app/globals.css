@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  /* PYRGOS FC identity */
-  --color-night: #04070f;
-  --color-navy-950: #060b1d;
-  --color-navy-900: #0a1128;
-  --color-navy-800: #101a3d;
-  --color-navy-700: #182658;
-  --color-navy-600: #22347a;
-  --color-royal: #2b59ff;
-  --color-royal-bright: #5c82ff;
-  --color-royal-deep: #1a3ac2;
-  --color-gold: #f5b841;
-  --color-gold-bright: #ffd376;
-  --color-gold-deep: #c98d1a;
-  --color-mist: #aab6d8;
-  --color-line: rgba(170, 182, 216, 0.14);
+  /* PYRGOS AFC identity — crimson, white, near-black (from the club crest) */
+  --color-night: #0d0405;
+  --color-ash-950: #160708;
+  --color-ash-900: #1f090b;
+  --color-ash-800: #321012;
+  --color-ash-700: #471518;
+  --color-ash-600: #611b1e;
+  --color-crimson: #c31b1b;
+  --color-crimson-bright: #ef5347;
+  --color-crimson-deep: #8e0f10;
+  --color-smoke: #d9c7c5;
+  --color-smoke-bright: #f1e6e4;
+  --color-smoke-deep: #a89290;
+  --color-mist: #c5aeac;
+  --color-line: rgba(217, 199, 197, 0.15);
 
-  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  --shadow-glow-gold: 0 0 40px -8px rgba(245, 184, 65, 0.45);
-  --shadow-glow-royal: 0 0 48px -10px rgba(43, 89, 255, 0.55);
-  --shadow-card: 0 18px 50px -20px rgba(2, 5, 16, 0.9);
+  --shadow-glow-crimson: 0 0 44px -8px rgba(195, 27, 27, 0.55);
+  --shadow-glow-smoke: 0 0 40px -10px rgba(241, 230, 228, 0.28);
+  --shadow-card: 0 18px 50px -20px rgba(10, 2, 3, 0.9);
 
   --animate-marquee: marquee 36s linear infinite;
 
@@ -52,15 +52,15 @@ html {
 
 body {
   background-color: var(--color-night);
-  color: #f4f6fc;
+  color: #fbf6f5;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
 ::selection {
-  background-color: var(--color-gold);
-  color: var(--color-night);
+  background-color: var(--color-crimson);
+  color: #ffffff;
 }
 
 /* ---- Utility layers ---------------------------------------------------- */
@@ -73,24 +73,24 @@ body {
 .glass {
   background: linear-gradient(
     150deg,
-    rgba(16, 26, 61, 0.55),
-    rgba(6, 11, 29, 0.65)
+    rgba(50, 16, 18, 0.55),
+    rgba(22, 7, 8, 0.65)
   );
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(170, 182, 216, 0.14);
+  border: 1px solid rgba(217, 199, 197, 0.15);
 }
 
-/* Gold gradient headline text */
-.text-gradient-gold {
-  background: linear-gradient(100deg, #ffd376 0%, #f5b841 45%, #e09b22 100%);
+/* Crimson gradient headline text */
+.text-gradient-crimson {
+  background: linear-gradient(100deg, #ff9285 0%, #ef5347 45%, #c31b1b 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.text-gradient-royal {
-  background: linear-gradient(100deg, #8ea8ff 0%, #5c82ff 50%, #2b59ff 100%);
+.text-gradient-smoke {
+  background: linear-gradient(100deg, #ffffff 0%, #f1e6e4 50%, #cbb3b0 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -129,7 +129,7 @@ body {
   left: -12%;
   background: radial-gradient(
     ellipse at top left,
-    rgba(43, 89, 255, 0.35),
+    rgba(195, 27, 27, 0.32),
     transparent 65%
   );
   transform: rotate(12deg);
@@ -139,7 +139,7 @@ body {
   right: -12%;
   background: radial-gradient(
     ellipse at top right,
-    rgba(245, 184, 65, 0.22),
+    rgba(241, 230, 228, 0.14),
     transparent 65%
   );
   transform: rotate(-12deg);
@@ -158,15 +158,15 @@ body {
 .gradient-border {
   position: relative;
   background:
-    linear-gradient(var(--color-navy-900), var(--color-navy-900)) padding-box,
-    linear-gradient(140deg, rgba(245, 184, 65, 0.55), rgba(43, 89, 255, 0.4) 55%, rgba(170, 182, 216, 0.12)) border-box;
+    linear-gradient(var(--color-ash-900), var(--color-ash-900)) padding-box,
+    linear-gradient(140deg, rgba(239, 83, 71, 0.55), rgba(241, 230, 228, 0.28) 55%, rgba(217, 199, 197, 0.12)) border-box;
   border: 1px solid transparent;
 }
 
 /* Pitch line pattern backdrop */
 .pitch-pattern {
   background-image:
-    linear-gradient(rgba(170, 182, 216, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(170, 182, 216, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(217, 199, 197, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(217, 199, 197, 0.05) 1px, transparent 1px);
   background-size: 64px 64px;
 }

@@ -1,15 +1,23 @@
 import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { StatCard } from "@/components/cards/StatCard";
+import { getDict } from "@/i18n";
+import type { Lang } from "@/types";
 
-const highlights = [
-  { value: "24", label: "Players", accent: "gold" as const },
-  { value: "8", label: "Wins This Season", accent: "royal" as const },
-  { value: "3", label: "Clean Sheets", accent: "gold" as const },
-  { value: "42", label: "Goals Scored", accent: "royal" as const },
-];
+interface TeamHighlightsProps {
+  lang: Lang;
+}
 
-export function TeamHighlights() {
+export function TeamHighlights({ lang }: TeamHighlightsProps) {
+  const dict = getDict(lang);
+
+  const highlights = [
+    { value: "39", label: dict.home.stats.players, accent: "crimson" as const },
+    { value: "14", label: dict.home.stats.wins, accent: "smoke" as const },
+    { value: "8", label: dict.home.stats.cleanSheets, accent: "crimson" as const },
+    { value: "61", label: dict.home.stats.goals, accent: "smoke" as const },
+  ];
+
   return (
     <section className="relative py-16 sm:py-20" aria-label="Team highlights">
       <Container>
