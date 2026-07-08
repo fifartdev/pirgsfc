@@ -2,15 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const locales = ["el", "en"];
+// Greek is the club's primary language: the main domain always lands on Greek.
+// Visitors reach English via the in-site language switcher (/en/…).
 const defaultLocale = "el";
-
-function getLocale(request: NextRequest): string {
-  const accept = request.headers.get("accept-language") ?? "";
-  // Greek is the club's primary language; only switch when English clearly leads.
-  const first = accept.split(",")[0]?.trim().toLowerCase() ?? "";
-  if (first.startsWith("en")) return "en";
-  return defaultLocale;
-}
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -20,8 +14,7 @@ export function proxy(request: NextRequest) {
   );
   if (pathnameHasLocale) return;
 
-  const locale = getLocale(request);
-  request.nextUrl.pathname = `/${locale}${pathname}`;
+  request.nextUrl.pathname = `/${defaultLocale}${pathname}`;
   return NextResponse.redirect(request.nextUrl);
 }
 

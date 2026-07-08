@@ -79,6 +79,14 @@ export function ContactForm({ strings }: ContactFormProps) {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
+    // In the static export there is no backend; validate on the client and
+    // confirm without a network round-trip.
+    if (process.env.NEXT_PUBLIC_STATIC_EXPORT === "1") {
+      setStatus("success");
+      form.reset();
+      return;
+    }
+
     setStatus("submitting");
     try {
       const response = await fetch("/api/contact", {

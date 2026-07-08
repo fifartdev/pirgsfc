@@ -53,6 +53,27 @@ bare paths to the visitor's language (Greek by default).
 - `src/types` — shared interfaces (`LocalizedText`, `Department`, ...)
 - `src/proxy.ts` — locale redirect (the Next.js proxy/middleware convention)
 
+## Static Export (plain HTML/CSS/JS)
+
+To produce a fully static bundle that runs on any static host (no Node server):
+
+```bash
+npm run export
+```
+
+This writes the site to `out/` and a `pyrgos-afc-static-site.zip` alongside it.
+Because a static export can't run the locale proxy or the POST `/api/contact`
+route, the export build:
+
+- always redirects the root `/` to the Greek site (`/el/`) via a generated
+  `out/index.html`;
+- makes the contact form validate and confirm entirely on the client.
+
+Serve it over HTTP (e.g. `npx serve out`, Netlify drop, GitHub Pages, S3,
+nginx) — the assets use absolute paths, so it is not meant to be opened via
+`file://`. The regular `npm run build` / `npm run start` remains a normal
+server build with the API route and proxy intact.
+
 ## Email Delivery
 
 The contact endpoint validates submissions and returns JSON without sending
