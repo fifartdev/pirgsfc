@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { getDict } from "@/i18n";
@@ -20,26 +21,38 @@ export function PlayerCard({ player, lang }: PlayerCardProps) {
       aria-label={`${fullName} — ${dict.positions[player.position]} #${player.number}`}
     >
       <article className="gradient-border relative overflow-hidden rounded-2xl shadow-card transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-glow-crimson">
-        {/* Visual header — CSS "trading card" portrait placeholder */}
+        {/* Visual header — photo or trading-card placeholder */}
         <div className="relative flex h-52 items-end justify-center overflow-hidden bg-gradient-to-b from-ash-700 via-ash-900 to-ash-950">
-          <span
-            className="absolute -right-4 top-2 select-none font-display text-[7rem] font-extrabold leading-none text-white/6 transition-transform duration-500 group-hover:scale-110"
-            aria-hidden="true"
-          >
-            {player.number}
-          </span>
-          <span
-            className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-crimson/25 blur-3xl"
-            aria-hidden="true"
-          />
-          <div
-            className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full border border-crimson/40 bg-gradient-to-b from-ash-600 to-ash-900 font-display text-3xl font-extrabold text-smoke-bright shadow-glow-crimson"
-            aria-hidden="true"
-          >
-            {initialsOf(player.firstName, player.lastName, lang)}
-          </div>
+          {player.photoUrl ? (
+            <Image
+              src={player.photoUrl}
+              alt={fullName}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <>
+              <span
+                className="absolute -right-4 top-2 select-none font-display text-[7rem] font-extrabold leading-none text-white/6 transition-transform duration-500 group-hover:scale-110"
+                aria-hidden="true"
+              >
+                {player.number}
+              </span>
+              <span
+                className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-crimson/25 blur-3xl"
+                aria-hidden="true"
+              />
+              <div
+                className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full border border-crimson/40 bg-gradient-to-b from-ash-600 to-ash-900 font-display text-3xl font-extrabold text-smoke-bright shadow-glow-crimson"
+                aria-hidden="true"
+              >
+                {initialsOf(player.firstName, player.lastName, lang)}
+              </div>
+            </>
+          )}
           {player.captain && (
-            <span className="absolute left-4 top-4">
+            <span className="absolute left-4 top-4 z-10">
               <Badge variant="crimson">{dict.common.captain}</Badge>
             </span>
           )}

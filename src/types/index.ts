@@ -36,6 +36,8 @@ export interface Player {
   featured?: boolean;
   captain?: boolean;
   stats: PlayerStats;
+  /** URL of the player's profile photo (populated from Payload media). */
+  photoUrl?: string;
 }
 
 export type MatchStatus = "upcoming" | "completed" | "live";
@@ -105,6 +107,10 @@ export interface NewsArticle {
   readingTime: number;
   featured?: boolean;
   content: { el: string[]; en: string[] };
+  /** URL of the featured image (populated from Payload media). */
+  imageUrl?: string;
+  /** Alt text for the featured image. */
+  imageAlt?: string;
 }
 
 export type SponsorTier = "principal" | "official" | "partner";

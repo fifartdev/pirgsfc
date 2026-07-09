@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { newsArticles, getArticleBySlug, getRelatedArticles } from "@/data/news";
+import { newsArticles } from "@/data/news";
+import { getCmsNewsArticle, getCmsRelatedArticles } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { formatDateLong } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const { lang: langParam, slug } = await params;
   const lang = hasLang(langParam) ? langParam : "el";
-  const article = getArticleBySlug(slug);
+  const article = await getCmsNewsArticle(slug);
   if (!article) return { title: "Not Found" };
   return {
     title: article.title[lang],
@@ -42,13 +43,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const article = getArticleBySlug(slug);
+  const [article, related] = await Promise.all([
+    getCmsNewsArticle(slug),
+    getCmsRelatedArticles(slug, 3),
+  ]);
 
   if (!article) {
     notFound();
   }
-
-  const related = getRelatedArticles(slug, 3);
 
   return (
     <>

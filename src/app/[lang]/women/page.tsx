@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TeamHub } from "@/components/sections/TeamHub";
 import { getDict, hasLang } from "@/i18n";
+import { getCmsMatches, getCmsTeamLogoUrl } from "@/lib/cms-data";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -25,15 +26,21 @@ export default async function WomenPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
   const dict = getDict(lang);
 
-  const [title, ...rest] = dict.teams.womenTitle.split(" ");
+  const [titleWord, ...rest] = dict.teams.womenTitle.split(" ");
+  const [matches, logoUrl] = await Promise.all([
+    getCmsMatches("women"),
+    getCmsTeamLogoUrl("pyrgos-afc-women"),
+  ]);
   return (
     <TeamHub
       lang={lang}
       department="women"
       eyebrow={dict.teams.womenEyebrow}
-      title={title}
+      title={titleWord}
       titleAccent={rest.join(" ")}
       text={dict.teams.womenText}
+      matches={matches}
+      logoUrl={logoUrl}
     />
   );
 }

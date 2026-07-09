@@ -5,7 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Badge } from "@/components/ui/Badge";
 import { NewsCard } from "@/components/cards/NewsCard";
-import { newsArticles, getFeaturedArticle } from "@/data/news";
+import { getCmsNewsArticles, getCmsFeaturedArticle } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { formatDate } from "@/lib/utils";
 
@@ -31,10 +31,11 @@ export default async function NewsPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const featured = getFeaturedArticle();
-  const rest = [...newsArticles]
-    .filter((a) => a.slug !== featured.slug)
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const [featured, articles] = await Promise.all([
+    getCmsFeaturedArticle(),
+    getCmsNewsArticles(),
+  ]);
+  const rest = articles.filter((a) => a.slug !== featured.slug);
 
   return (
     <>

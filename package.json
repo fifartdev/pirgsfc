@@ -7,15 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "export": "bash scripts/export-static.sh"
+    "export": "bash scripts/export-static.sh",
+    "seed": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/seed.ts",
+    "generate:types": "payload generate:types"
   },
   "dependencies": {
+    "@payloadcms/db-postgres": "^3.43.0",
+    "@payloadcms/next": "^3.43.0",
+    "@payloadcms/richtext-lexical": "^3.43.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",
+    "graphql": "^16.9.0",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
+    "payload": "^3.43.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "sharp": "^0.33.5",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
@@ -23,9 +31,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

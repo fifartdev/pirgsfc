@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { getDict } from "@/i18n";
@@ -19,14 +20,26 @@ export function NewsCard({ article, lang }: NewsCardProps) {
     >
       <article className="glass flex h-full flex-col overflow-hidden rounded-2xl shadow-card transition-all duration-300 group-hover:-translate-y-1 group-hover:border-crimson/30">
         <div
-          className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-ash-700 via-ash-900 to-night"
-          aria-hidden="true"
+          className="relative flex h-40 items-center justify-center overflow-hidden bg-linear-to-br from-ash-700 via-ash-900 to-night"
+          aria-hidden={!article.imageUrl}
         >
-          <span className="absolute h-32 w-32 rounded-full bg-crimson/20 blur-3xl" />
-          <span className="select-none font-display text-5xl font-extrabold uppercase text-white/8 transition-transform duration-500 group-hover:scale-110">
-            PAFC
-          </span>
-          <span className="absolute left-4 top-4">
+          {article.imageUrl ? (
+            <Image
+              src={article.imageUrl}
+              alt={article.imageAlt ?? article.title["el"]}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <>
+              <span className="absolute h-32 w-32 rounded-full bg-crimson/20 blur-3xl" />
+              <span className="select-none font-display text-5xl font-extrabold uppercase text-white/8 transition-transform duration-500 group-hover:scale-110">
+                PAFC
+              </span>
+            </>
+          )}
+          <span className="absolute left-4 top-4 z-10">
             <Badge variant="crimson">{dict.categories[article.category]}</Badge>
           </span>
         </div>

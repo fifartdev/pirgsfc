@@ -5,7 +5,7 @@ import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Badge } from "@/components/ui/Badge";
 import { MatchesTabs } from "@/components/sections/MatchesTabs";
-import { getUpcomingMatches, getCompletedMatches, getNextMatch } from "@/data/matches";
+import { getCmsUpcomingMatches, getCmsCompletedMatches, getCmsNextMatch } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { formatDateLong } from "@/lib/utils";
 
@@ -31,9 +31,11 @@ export default async function MatchesPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const upcoming = getUpcomingMatches();
-  const completed = getCompletedMatches();
-  const nextMatch = getNextMatch();
+  const [upcoming, completed, nextMatch] = await Promise.all([
+    getCmsUpcomingMatches(),
+    getCmsCompletedMatches(),
+    getCmsNextMatch(),
+  ]);
 
   return (
     <>

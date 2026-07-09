@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { NAV_ITEMS, SITE_URL } from "@/lib/constants";
 import { getDict, hasLang, LANGS } from "@/i18n";
 import { localeHref } from "@/lib/utils";
+import { organizationJsonLd, stadiumJsonLd } from "@/lib/seo";
 import "../globals.css";
 
 const manrope = Manrope({
@@ -74,6 +75,16 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
 
   return (
     <html lang={lang} className={`${manrope.variable} ${inter.variable} h-full antialiased`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(stadiumJsonLd()) }}
+        />
+      </head>
       <body className="flex min-h-full flex-col bg-night">
         <Header
           lang={lang}

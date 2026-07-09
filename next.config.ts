@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withPayload } from "@payloadcms/next/withPayload";
 
 // When STATIC_EXPORT=1, build a fully static HTML/CSS/JS bundle into `out/`.
 // The default build stays a normal server build (keeps the /api/contact route
@@ -11,6 +12,15 @@ const nextConfig: NextConfig = isStaticExport
       trailingSlash: true,
       images: { unoptimized: true },
     }
-  : {};
+  : {
+      images: {
+        remotePatterns: [
+          // Payload media served from the same origin in dev and production
+          { protocol: "http", hostname: "localhost" },
+          { protocol: "https", hostname: "**" },
+        ],
+      },
+    };
 
-export default nextConfig;
+// Skip Payload integration when building a static export (no database needed)
+export default isStaticExport ? nextConfig : withPayload(nextConfig);

@@ -3,10 +3,11 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { RosterGrid } from "@/components/sections/RosterGrid";
 import { MatchCard } from "@/components/cards/MatchCard";
-import { getPlayersByDepartment, } from "@/data/players";
+import Image from "next/image";
+import { getPlayersByDepartment } from "@/data/players";
 import { getUpcomingMatches, getCompletedMatches } from "@/data/matches";
 import { getDict } from "@/i18n";
-import type { Department, Lang } from "@/types";
+import type { Department, Lang, Match } from "@/types";
 
 interface TeamHubProps {
   lang: Lang;
@@ -15,13 +16,17 @@ interface TeamHubProps {
   title: string;
   titleAccent: string;
   text: string;
+  /** Pre-fetched matches from CMS; falls back to static data when omitted. */
+  matches?: Match[];
+  /** Team logo URL from CMS media. */
+  logoUrl?: string;
 }
 
 /** Shared page body for the men's, women's, and futsal team sections. */
-export function TeamHub({ lang, department, eyebrow, title, titleAccent, text }: TeamHubProps) {
+export function TeamHub({ lang, department, eyebrow, title, titleAccent, text, matches, logoUrl }: TeamHubProps) {
   const dict = getDict(lang);
   const squad = getPlayersByDepartment(department);
-  const deptMatches = [
+  const deptMatches = matches ?? [
     ...getUpcomingMatches(department),
     ...getCompletedMatches(department).slice(0, 2),
   ];
@@ -38,12 +43,25 @@ export function TeamHub({ lang, department, eyebrow, title, titleAccent, text }:
         </span>
         <Container className="relative">
           <AnimatedReveal>
-            <p className="font-display text-xs font-bold uppercase tracking-[0.32em] text-crimson-bright">
-              {eyebrow}
-            </p>
-            <h1 className="mt-4 font-display text-4xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-6xl">
-              {title} <span className="text-gradient-crimson">{titleAccent}</span>
-            </h1>
+            <div className="flex items-center gap-5">
+              {logoUrl && (
+                <Image
+                  src={logoUrl}
+                  alt={`${title} ${titleAccent} logo`}
+                  width={72}
+                  height={72}
+                  className="shrink-0 drop-shadow-lg"
+                />
+              )}
+              <div>
+                <p className="font-display text-xs font-bold uppercase tracking-[0.32em] text-crimson-bright">
+                  {eyebrow}
+                </p>
+                <h1 className="mt-4 font-display text-4xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-6xl">
+                  {title} <span className="text-gradient-crimson">{titleAccent}</span>
+                </h1>
+              </div>
+            </div>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-mist sm:text-lg">
               {text}
             </p>
