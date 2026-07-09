@@ -9,6 +9,7 @@
     "lint": "eslint",
     "export": "bash scripts/export-static.sh",
     "seed": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/seed.ts",
+    "reset-admin": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/reset-admin.ts",
     "generate:types": "payload generate:types"
   },
   "dependencies": {
