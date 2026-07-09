@@ -27,13 +27,10 @@ import { SeoDefaults } from "./src/globals/SeoDefaults";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-if (!process.env.PAYLOAD_SECRET) {
-  throw new Error("Missing PAYLOAD_SECRET environment variable");
-}
-
-if (!process.env.DATABASE_URI) {
-  throw new Error("Missing DATABASE_URI environment variable");
-}
+// Do NOT validate env vars here. Top-level throws cause the module to fail
+// evaluation under Turbopack, making `config` undefined everywhere it is
+// imported and producing a misleading "Cannot destructure property 'config'"
+// TypeError. Payload validates PAYLOAD_SECRET at getPayload() time.
 
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000",
