@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 
 // Collections
 import { Users } from "./src/collections/Users";
@@ -82,6 +83,15 @@ export default buildConfig({
       fileSize: 10_000_000, // 10 MB
     },
   },
+
+  // Falls back to local disk storage when BLOB_READ_WRITE_TOKEN is unset
+  // (e.g. local dev without Blob configured).
+  plugins: [
+    vercelBlobStorage({
+      collections: { media: true },
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    }),
+  ],
 
   cors: [process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000"],
 
