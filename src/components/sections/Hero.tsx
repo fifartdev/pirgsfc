@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { formatDate } from "@/lib/utils";
+import { formatDate, localeHref } from "@/lib/utils";
 import type { Lang, Match } from "@/types";
 
 interface HeroStrings {
@@ -105,10 +105,10 @@ export function Hero({ lang, nextMatch, strings }: HeroProps) {
           </motion.p>
 
           <motion.div {...fadeUp(0.4)} className="mt-10 flex flex-wrap gap-4">
-            <Button href={`/${lang}/matches`} variant="crimson" size="lg">
+            <Button href={localeHref(lang, "/matches")} variant="crimson" size="lg">
               {strings.viewMatches}
             </Button>
-            <Button href={`/${lang}/men`} variant="outline" size="lg">
+            <Button href={localeHref(lang, "/men")} variant="outline" size="lg">
               {strings.meetTheTeam}
             </Button>
           </motion.div>
@@ -151,7 +151,7 @@ export function Hero({ lang, nextMatch, strings }: HeroProps) {
                 <p>{nextMatch.venue[lang]}</p>
               </div>
               <Link
-                href={`/${lang}/matches`}
+                href={localeHref(lang, "/matches")}
                 className="mt-6 block rounded-full bg-white/5 py-3 text-center font-display text-xs font-bold uppercase tracking-[0.2em] text-crimson-bright transition-colors hover:bg-crimson hover:text-white"
               >
                 {strings.matchPreview} →

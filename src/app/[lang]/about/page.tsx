@@ -10,6 +10,7 @@ import { StatCard } from "@/components/cards/StatCard";
 import { ClubValues } from "@/components/sections/ClubValues";
 import { CLUB } from "@/lib/constants";
 import { getDict, hasLang } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -72,7 +73,7 @@ export default async function AboutPage({ params }: PageProps) {
                 <p>{dict.about.mission3}</p>
               </div>
               <div className="mt-8">
-                <Button href={`/${lang}/men`} variant="crimson">
+                <Button href={localeHref(lang, "/men")} variant="crimson">
                   {dict.common.meetTheTeam}
                 </Button>
               </div>
@@ -165,7 +166,7 @@ export default async function AboutPage({ params }: PageProps) {
                   </div>
                 </dl>
                 <div className="mt-8">
-                  <Button href={`/${lang}/matches`} variant="crimson">
+                  <Button href={localeHref(lang, "/matches")} variant="crimson">
                     {dict.about.seeMatchday}
                   </Button>
                 </div>
@@ -205,10 +206,10 @@ export default async function AboutPage({ params }: PageProps) {
                 <p>{dict.about.fans2}</p>
               </div>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Button href={`/${lang}/contact`} variant="crimson">
+                <Button href={localeHref(lang, "/contact")} variant="crimson">
                   {dict.common.getInvolved}
                 </Button>
-                <Button href={`/${lang}/calendar`} variant="outline">
+                <Button href={localeHref(lang, "/calendar")} variant="outline">
                   {dict.about.communityEvents}
                 </Button>
               </div>

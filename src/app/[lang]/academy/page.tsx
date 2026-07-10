@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { academyGroups } from "@/data/academy";
 import { getDict, hasLang } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -79,7 +80,7 @@ export default async function AcademyPage({ params }: PageProps) {
                     {dict.academy.graduatesText}
                   </p>
                   <div className="mt-6">
-                    <Button href={`/${lang}/men`} variant="outline" size="sm">
+                    <Button href={localeHref(lang, "/men")} variant="outline" size="sm">
                       {dict.common.meetTheTeam}
                     </Button>
                   </div>
@@ -155,7 +156,7 @@ export default async function AcademyPage({ params }: PageProps) {
               {dict.academy.trialsText}
             </p>
             <div className="mt-9">
-              <Button href={`/${lang}/contact`} variant="crimson" size="lg">
+              <Button href={localeHref(lang, "/contact")} variant="crimson" size="lg">
                 {dict.academy.trialsCta}
               </Button>
             </div>

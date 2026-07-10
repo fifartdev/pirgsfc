@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Crest } from "@/components/ui/Crest";
 import { MobileNav } from "@/components/layout/MobileNav";
-import { cn } from "@/lib/utils";
+import { cn, localeHref } from "@/lib/utils";
+import { DEFAULT_LANG } from "@/i18n";
 import type { Lang } from "@/types";
 
 export interface NavEntry {
@@ -44,14 +45,16 @@ export function Header({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const homeHref = `/${lang}`;
+  const homeHref = localeHref(lang, "/");
   const isActive = (href: string) =>
     href === homeHref ? pathname === homeHref : pathname.startsWith(href);
 
-  // Swap the locale prefix while keeping the rest of the path.
+  // Swap the locale while keeping the rest of the path. The default
+  // language (Greek) has no prefix, so only strip it for non-default langs.
   const otherLang: Lang = lang === "el" ? "en" : "el";
-  const switchHref =
-    pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${otherLang}`) || `/${otherLang}`;
+  const rawPath =
+    lang === DEFAULT_LANG ? pathname : pathname.replace(new RegExp(`^/${lang}(?=/|$)`), "") || "/";
+  const switchHref = localeHref(otherLang, rawPath);
 
   return (
     <header
@@ -113,7 +116,7 @@ export function Header({
             {otherLang.toUpperCase()}
           </Link>
           <Link
-            href={`/${lang}/matches`}
+            href={localeHref(lang, "/matches")}
             className="inline-flex items-center rounded-full bg-crimson px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:bg-crimson-bright hover:shadow-glow-crimson focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson"
           >
             {matchdayLabel}

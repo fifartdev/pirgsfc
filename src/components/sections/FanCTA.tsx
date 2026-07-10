@@ -3,6 +3,7 @@ import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Button } from "@/components/ui/Button";
 import { Crest } from "@/components/ui/Crest";
 import { getDict } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 import type { Lang } from "@/types";
 
 interface FanCTAProps {
@@ -42,10 +43,10 @@ export function FanCTA({ lang }: FanCTAProps) {
         </AnimatedReveal>
         <AnimatedReveal delay={0.3}>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Button href={`/${lang}/contact`} variant="crimson" size="lg">
+            <Button href={localeHref(lang, "/contact")} variant="crimson" size="lg">
               {dict.home.ctaJoin}
             </Button>
-            <Button href={`/${lang}/about`} variant="outline" size="lg">
+            <Button href={localeHref(lang, "/about")} variant="outline" size="lg">
               {dict.common.ourStory}
             </Button>
           </div>

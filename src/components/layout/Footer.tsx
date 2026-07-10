@@ -31,7 +31,7 @@ export function Footer({ lang }: FooterProps) {
       <Container className="relative">
         <div className="grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link href={`/${lang}`} className="inline-flex items-center gap-3">
+            <Link href={localeHref(lang, "/")} className="inline-flex items-center gap-3">
               <Crest size="md" />
               <span className="flex flex-col leading-none">
                 <span className="font-display text-xl font-extrabold uppercase tracking-wide text-white">

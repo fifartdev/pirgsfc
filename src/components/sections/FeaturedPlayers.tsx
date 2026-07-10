@@ -4,6 +4,7 @@ import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Button } from "@/components/ui/Button";
 import { PlayerCard } from "@/components/cards/PlayerCard";
 import { getDict } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 import type { Lang, Player } from "@/types";
 
 interface FeaturedPlayersProps {
@@ -35,7 +36,7 @@ export function FeaturedPlayers({ players, lang }: FeaturedPlayersProps) {
             />
           </AnimatedReveal>
           <AnimatedReveal delay={0.1}>
-            <Button href={`/${lang}/men`} variant="outline">
+            <Button href={localeHref(lang, "/men")} variant="outline">
               {dict.common.fullSquad}
             </Button>
           </AnimatedReveal>

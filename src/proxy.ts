@@ -49,16 +49,25 @@ function localeProxy(request: NextRequest) {
 
   if (isBypassed) return;
 
-  // Skip if already has a locale prefix
-  const hasLocale = locales.some(
-    (locale) =>
-      pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-  if (hasLocale) return;
+  // Canonicalize explicit /el URLs to the unprefixed default locale
+  if (pathname === `/${defaultLocale}` || pathname.startsWith(`/${defaultLocale}/`)) {
+    request.nextUrl.pathname = pathname.slice(`/${defaultLocale}`.length) || "/";
+    return NextResponse.redirect(request.nextUrl);
+  }
 
-  // Redirect to default locale (Greek)
-  request.nextUrl.pathname = `/${defaultLocale}${pathname}`;
-  return NextResponse.redirect(request.nextUrl);
+  // Non-default locales (e.g. /en) keep their prefix and route as-is
+  const hasNonDefaultLocale = locales.some(
+    (locale) =>
+      locale !== defaultLocale &&
+      (pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`)
+  );
+  if (hasNonDefaultLocale) return;
+
+  // Bare paths are the default locale (Greek); rewrite internally without
+  // exposing the /el prefix in the browser's address bar.
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = pathname === "/" ? `/${defaultLocale}` : `/${defaultLocale}${pathname}`;
+  return NextResponse.rewrite(rewriteUrl);
 }
 
 export function proxy(request: NextRequest) {

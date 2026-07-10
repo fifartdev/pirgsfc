@@ -1,4 +1,5 @@
 import type { Lang, LocalizedText } from "@/types";
+import { localeHref } from "@/lib/utils";
 
 export const CLUB = {
   name: "PYRGOS AFC",
@@ -55,5 +56,5 @@ export const DEPARTMENT_PATHS: Record<"men" | "women" | "futsal", string> = {
 };
 
 export function departmentPath(department: "men" | "women" | "futsal", lang: Lang): string {
-  return `/${lang}${DEPARTMENT_PATHS[department]}`;
+  return localeHref(lang, DEPARTMENT_PATHS[department]);
 }

@@ -10,7 +10,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { players, getPlayerBySlug, getRelatedPlayers } from "@/data/players";
 import { DEPARTMENT_PATHS } from "@/lib/constants";
 import { getDict, hasLang } from "@/i18n";
-import { formatDateLong, initialsOf } from "@/lib/utils";
+import { formatDateLong, initialsOf, localeHref } from "@/lib/utils";
 
 interface PlayerPageProps {
   params: Promise<{ lang: string; slug: string }>;
@@ -49,7 +49,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   }
 
   const related = getRelatedPlayers(slug, 3);
-  const teamHref = `/${lang}${DEPARTMENT_PATHS[player.department]}`;
+  const teamHref = localeHref(lang, DEPARTMENT_PATHS[player.department]);
 
   const statItems = [
     { label: dict.common.appearances, value: player.stats.appearances },

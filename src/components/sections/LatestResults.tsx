@@ -4,6 +4,7 @@ import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Button } from "@/components/ui/Button";
 import { MatchCard } from "@/components/cards/MatchCard";
 import { getDict } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 import type { Lang, Match } from "@/types";
 
 interface LatestResultsProps {
@@ -29,7 +30,7 @@ export function LatestResults({ matches, lang }: LatestResultsProps) {
             />
           </AnimatedReveal>
           <AnimatedReveal delay={0.1}>
-            <Button href={`/${lang}/matches`} variant="outline">
+            <Button href={localeHref(lang, "/matches")} variant="outline">
               {dict.home.allFixtures}
             </Button>
           </AnimatedReveal>

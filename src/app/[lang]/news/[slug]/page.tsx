@@ -10,7 +10,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { newsArticles } from "@/data/news";
 import { getCmsNewsArticle, getCmsRelatedArticles } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
-import { formatDateLong } from "@/lib/utils";
+import { formatDateLong, localeHref } from "@/lib/utils";
 
 interface ArticlePageProps {
   params: Promise<{ lang: string; slug: string }>;
@@ -60,7 +60,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <Container className="relative max-w-4xl">
           <AnimatedReveal>
             <Link
-              href={`/${lang}/news`}
+              href={localeHref(lang, "/news")}
               className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-mist transition-colors hover:text-crimson-bright"
             >
               ← {dict.common.backToNews}
@@ -105,7 +105,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <p className="font-display text-xs font-bold uppercase tracking-[0.25em] text-crimson-bright/90">
                 {dict.news.articleFooter}
               </p>
-              <Button href={`/${lang}/news`} variant="outline" size="sm">
+              <Button href={localeHref(lang, "/news")} variant="outline" size="sm">
                 {dict.common.backToNews}
               </Button>
             </div>

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { getDict } from "@/i18n";
-import { initialsOf } from "@/lib/utils";
+import { initialsOf, localeHref } from "@/lib/utils";
 import type { Lang, Player } from "@/types";
 
 interface PlayerCardProps {
@@ -16,7 +16,7 @@ export function PlayerCard({ player, lang }: PlayerCardProps) {
 
   return (
     <Link
-      href={`/${lang}/roster/${player.slug}`}
+      href={localeHref(lang, `/roster/${player.slug}`)}
       className="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-crimson"
       aria-label={`${fullName} — ${dict.positions[player.position]} #${player.number}`}
     >

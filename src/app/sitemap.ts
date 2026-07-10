@@ -2,12 +2,12 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 import { getPayloadClient } from "@/lib/payload";
 import { newsArticles } from "@/data/news";
-
-const LANGS = ["el", "en"];
+import { localeHref } from "@/lib/utils";
+import { LANGS } from "@/i18n";
 
 function localisedUrls(path: string, priority: number, changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] = "weekly"): MetadataRoute.Sitemap {
   return LANGS.map((lang) => ({
-    url: `${SITE_URL}/${lang}${path}`,
+    url: `${SITE_URL}${localeHref(lang, path)}`,
     lastModified: new Date(),
     changeFrequency,
     priority,
@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // News articles from static data (fallback)
   const staticNewsUrls: MetadataRoute.Sitemap = newsArticles.flatMap((article) =>
     LANGS.map((lang) => ({
-      url: `${SITE_URL}/${lang}/news/${article.slug}`,
+      url: `${SITE_URL}${localeHref(lang, `/news/${article.slug}`)}`,
       lastModified: new Date(article.date),
       changeFrequency: "monthly" as const,
       priority: 0.7,
@@ -66,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           const d = doc as { slug?: string; updatedAt?: string };
           if (!d.slug) return [];
           return LANGS.map((lang) => ({
-            url: `${SITE_URL}/${lang}/news/${d.slug}`,
+            url: `${SITE_URL}${localeHref(lang, `/news/${d.slug}`)}`,
             lastModified: d.updatedAt ? new Date(d.updatedAt) : new Date(),
             changeFrequency: "monthly" as const,
             priority: 0.7,
@@ -79,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           const d = doc as { slug?: string; updatedAt?: string };
           if (!d.slug) return [];
           return LANGS.map((lang) => ({
-            url: `${SITE_URL}/${lang}/roster/${d.slug}`,
+            url: `${SITE_URL}${localeHref(lang, `/roster/${d.slug}`)}`,
             lastModified: d.updatedAt ? new Date(d.updatedAt) : new Date(),
             changeFrequency: "weekly" as const,
             priority: 0.75,

@@ -45,7 +45,7 @@ export async function generateMetadata({
     },
     description: dict.meta.siteDescription,
     alternates: {
-      languages: { el: "/el", en: "/en" },
+      languages: { el: "/", en: "/en" },
     },
     openGraph: {
       title: dict.meta.siteTitle,

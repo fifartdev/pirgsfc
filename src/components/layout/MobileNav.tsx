@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Crest } from "@/components/ui/Crest";
-import { cn } from "@/lib/utils";
+import { cn, localeHref } from "@/lib/utils";
 import type { Lang } from "@/types";
 import type { NavEntry } from "@/components/layout/Header";
 
@@ -40,7 +40,7 @@ export function MobileNav({
     };
   }, [open]);
 
-  const homeHref = `/${lang}`;
+  const homeHref = localeHref(lang, "/");
   const isActive = (href: string) =>
     href === homeHref ? pathname === homeHref : pathname.startsWith(href);
 
@@ -124,7 +124,7 @@ export function MobileNav({
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
-                    href={`/${lang}/matches`}
+                    href={localeHref(lang, "/matches")}
                     onClick={() => setOpen(false)}
                     className="inline-flex items-center rounded-full bg-crimson px-8 py-4 font-display text-sm font-bold uppercase tracking-widest text-white shadow-glow-crimson"
                   >

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { getDict } from "@/i18n";
-import { formatDate } from "@/lib/utils";
+import { formatDate, localeHref } from "@/lib/utils";
 import type { Lang, NewsArticle } from "@/types";
 
 interface NewsCardProps {
@@ -15,7 +15,7 @@ export function NewsCard({ article, lang }: NewsCardProps) {
 
   return (
     <Link
-      href={`/${lang}/news/${article.slug}`}
+      href={localeHref(lang, `/news/${article.slug}`)}
       className="group block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-crimson"
     >
       <article className="glass flex h-full flex-col overflow-hidden rounded-2xl shadow-card transition-all duration-300 group-hover:-translate-y-1 group-hover:border-crimson/30">

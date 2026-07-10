@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { getCmsNewsArticles, getCmsFeaturedArticle } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
-import { formatDate } from "@/lib/utils";
+import { formatDate, localeHref } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -62,7 +62,7 @@ export default async function NewsPage({ params }: PageProps) {
         <Container>
           <AnimatedReveal>
             <Link
-              href={`/${lang}/news/${featured.slug}`}
+              href={localeHref(lang, `/news/${featured.slug}`)}
               className="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-crimson"
             >
               <article className="gradient-border noise relative overflow-hidden rounded-3xl shadow-card transition-transform duration-300 group-hover:-translate-y-1">

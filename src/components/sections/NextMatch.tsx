@@ -4,7 +4,7 @@ import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getDict } from "@/i18n";
-import { formatDateLong } from "@/lib/utils";
+import { formatDateLong, localeHref } from "@/lib/utils";
 import type { Lang, Match } from "@/types";
 
 interface NextMatchProps {
@@ -74,7 +74,7 @@ export function NextMatch({ match, lang }: NextMatchProps) {
                 </p>
               </div>
               <Button
-                href={`/${lang}/news/match-preview-pyrgos-afc-vs-olympia-united`}
+                href={localeHref(lang, "/news/match-preview-pyrgos-afc-vs-olympia-united")}
                 variant="crimson"
               >
                 {dict.common.matchPreview}

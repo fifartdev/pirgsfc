@@ -4,6 +4,7 @@ import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Button } from "@/components/ui/Button";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { getDict } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 import type { Lang, NewsArticle } from "@/types";
 
 interface LatestNewsProps {
@@ -26,7 +27,7 @@ export function LatestNews({ articles, lang }: LatestNewsProps) {
             />
           </AnimatedReveal>
           <AnimatedReveal delay={0.1}>
-            <Button href={`/${lang}/news`} variant="outline">
+            <Button href={localeHref(lang, "/news")} variant="outline">
               {dict.home.allNews}
             </Button>
           </AnimatedReveal>

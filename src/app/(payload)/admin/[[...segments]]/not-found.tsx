@@ -1,6 +1,6 @@
 import { NotFoundPage } from "@payloadcms/next/views";
 import config from "@payload-config";
-import { importMap } from "@/app/(payload)/importMap";
+import { importMap } from "@/app/(payload)/admin/importMap";
 
 export default function NotFound() {
   const params = Promise.resolve({ segments: [] });

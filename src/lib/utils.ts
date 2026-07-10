@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Lang, LocalizedText } from "@/types";
-import { dateLocale } from "@/i18n";
+import { dateLocale, DEFAULT_LANG } from "@/i18n";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -50,7 +50,8 @@ export function initialsOf(firstName: LocalizedText, lastName: LocalizedText, la
   return `${firstName[lang].charAt(0)}${lastName[lang].charAt(0)}`.toUpperCase();
 }
 
-/** Prefix an internal path with the active language. */
+/** Prefix an internal path with the active language. The default language (Greek) is unprefixed. */
 export function localeHref(lang: Lang, path: string): string {
+  if (lang === DEFAULT_LANG) return path;
   return path === "/" ? `/${lang}` : `/${lang}${path}`;
 }

@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { getDict } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 import type { Lang } from "@/types";
 
 interface DepartmentsSectionProps {
@@ -18,25 +19,25 @@ export function DepartmentsSection({ lang }: DepartmentsSectionProps) {
       icon: Trophy,
       title: dict.teams.menTitle,
       text: dict.teams.menText,
-      href: `/${lang}/men`,
+      href: localeHref(lang, "/men"),
     },
     {
       icon: Users,
       title: dict.teams.womenTitle,
       text: dict.teams.womenText,
-      href: `/${lang}/women`,
+      href: localeHref(lang, "/women"),
     },
     {
       icon: Zap,
       title: dict.teams.futsalTitle,
       text: dict.teams.futsalText,
-      href: `/${lang}/futsal`,
+      href: localeHref(lang, "/futsal"),
     },
     {
       icon: GraduationCap,
       title: dict.academy.title,
       text: dict.academy.heroText,
-      href: `/${lang}/academy`,
+      href: localeHref(lang, "/academy"),
     },
   ];
 

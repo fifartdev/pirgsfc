@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Crest } from "@/components/ui/Crest";
 import { getDict, hasLang } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 
 export default function NotFound() {
   const params = useParams<{ lang?: string }>();
@@ -26,10 +27,10 @@ export default function NotFound() {
           {dict.notFound.text}
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <Button href={`/${lang}`} variant="crimson">
+          <Button href={localeHref(lang, "/")} variant="crimson">
             {dict.notFound.backHome}
           </Button>
-          <Button href={`/${lang}/matches`} variant="outline">
+          <Button href={localeHref(lang, "/matches")} variant="outline">
             {dict.common.viewMatches}
           </Button>
         </div>
