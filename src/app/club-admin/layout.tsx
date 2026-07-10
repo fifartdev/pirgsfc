@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Sidebar } from "@/components/club-admin/Sidebar";
-import { getCurrentUser } from "@/lib/club-admin/auth";
 import "../globals.css";
 
 const inter = Inter({ subsets: ["latin", "greek"], variable: "--font-inter" });
@@ -14,28 +12,22 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function ClubAdminLayout({
+// Only the <html>/<body> shell lives here. Auth-gated pages (everything
+// except /login) get their own nested layout in (protected)/ so that
+// layout mounts fresh — with the post-login session — the first time a
+// client-side navigation enters that route group. A single layout shared
+// with /login would keep rendering with the pre-login (no user) output
+// across client-side transitions, since Next.js does not re-run a layout
+// that stays mounted across a navigation.
+export default function ClubAdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
-
   return (
     <html lang="el" className={inter.variable}>
-      <body className="flex h-screen overflow-hidden bg-[#0a0a0a] text-white antialiased">
-        {user && (
-          <Sidebar
-            userName={
-              user.firstName && user.lastName
-                ? `${user.firstName} ${user.lastName}`
-                : user.email
-            }
-          />
-        )}
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-6xl px-8 py-8">{children}</div>
-        </main>
+      <body className="h-screen overflow-hidden bg-[#0a0a0a] text-white antialiased">
+        {children}
       </body>
     </html>
   );

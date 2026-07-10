@@ -5,6 +5,16 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPayloadClient } from "@/lib/payload";
 
+function parseRichText(formData: FormData, key: string): unknown {
+  const raw = formData.get(key);
+  if (typeof raw !== "string" || !raw) return undefined;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 async function getAuthenticatedPayload() {
   const payload = await getPayloadClient();
   if (!payload) throw new Error("Service unavailable");
@@ -194,6 +204,34 @@ export async function createTeamAction(_prev: unknown, formData: FormData) {
   }
 }
 
+export async function updateTeamAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    const name = (formData.get("name") as string)?.trim();
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    if (!name) return { error: "Το όνομα είναι υποχρεωτικό." };
+
+    await payload.update({
+      collection: "teams",
+      id,
+      data: {
+        name,
+        nameEn: formData.get("nameEn") as string,
+        category: formData.get("category") as string,
+        ageGroup: formData.get("ageGroup") as string,
+        status: (formData.get("status") as string) || "active",
+        description: parseRichText(formData, "description"),
+      },
+    });
+    revalidatePath("/club-admin/teams");
+    revalidatePath(`/club-admin/teams/${id}`);
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
 // ─── LEAGUES ─────────────────────────────────────────────────────────────────
 
 export async function createLeagueAction(_prev: unknown, formData: FormData) {
@@ -223,6 +261,35 @@ export async function createLeagueAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/leagues");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateLeagueAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    const name = (formData.get("name") as string)?.trim();
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    if (!name) return { error: "Το όνομα είναι υποχρεωτικό." };
+
+    await payload.update({
+      collection: "leagues",
+      id,
+      data: {
+        name,
+        nameEn: formData.get("nameEn") as string,
+        type: (formData.get("type") as string) || "league",
+        category: formData.get("category") as string,
+        organizer: formData.get("organizer") as string,
+        country: (formData.get("country") as string) || "Ελλάδα",
+        region: formData.get("region") as string,
+      },
+    });
+    revalidatePath("/club-admin/leagues");
+    revalidatePath(`/club-admin/leagues/${id}`);
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -304,6 +371,36 @@ export async function createVenueAction(_prev: unknown, formData: FormData) {
   }
 }
 
+export async function updateVenueAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    const name = (formData.get("name") as string)?.trim();
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    if (!name) return { error: "Το όνομα είναι υποχρεωτικό." };
+
+    await payload.update({
+      collection: "venues",
+      id,
+      data: {
+        name,
+        nameEn: formData.get("nameEn") as string,
+        type: (formData.get("type") as string) || "stadium",
+        city: (formData.get("city") as string) || "Πύργος",
+        country: (formData.get("country") as string) || "Ελλάδα",
+        address: formData.get("address") as string,
+        capacity: parseInt(formData.get("capacity") as string) || undefined,
+        description: parseRichText(formData, "description"),
+      },
+    });
+    revalidatePath("/club-admin/venues");
+    revalidatePath(`/club-admin/venues/${id}`);
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
 // ─── MATCHES ─────────────────────────────────────────────────────────────────
 
 export async function createMatchAction(_prev: unknown, formData: FormData) {
@@ -315,6 +412,7 @@ export async function createMatchAction(_prev: unknown, formData: FormData) {
     const season = formData.get("season") as string;
     const team = formData.get("team") as string;
     const league = formData.get("league") as string;
+    const venue = (formData.get("venue") as string)?.trim() || undefined;
 
     if (!homeTeamName || !awayTeamName || !matchDate || !season || !team || !league) {
       return { error: "Συμπληρώστε όλα τα υποχρεωτικά πεδία." };
@@ -329,6 +427,7 @@ export async function createMatchAction(_prev: unknown, formData: FormData) {
         season,
         team,
         league,
+        venue,
         matchType: (formData.get("matchType") as string) || "league",
         kickoffTime: formData.get("kickoffTime") as string,
         matchweek: formData.get("matchweek") as string,
@@ -337,6 +436,54 @@ export async function createMatchAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/matches");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateMatchAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    const homeTeamName = (formData.get("homeTeamName") as string)?.trim();
+    const awayTeamName = (formData.get("awayTeamName") as string)?.trim();
+    const matchDate = formData.get("matchDate") as string;
+    const season = formData.get("season") as string;
+    const team = formData.get("team") as string;
+    const league = formData.get("league") as string;
+    const venue = (formData.get("venue") as string)?.trim() || undefined;
+
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    if (!homeTeamName || !awayTeamName || !matchDate || !season || !team || !league) {
+      return { error: "Συμπληρώστε όλα τα υποχρεωτικά πεδία." };
+    }
+
+    const homeScoreRaw = parseInt(formData.get("homeScore") as string);
+    const awayScoreRaw = parseInt(formData.get("awayScore") as string);
+
+    await payload.update({
+      collection: "matches",
+      id,
+      data: {
+        homeTeamName,
+        awayTeamName,
+        matchDate,
+        season,
+        team,
+        league,
+        venue,
+        matchType: (formData.get("matchType") as string) || "league",
+        kickoffTime: formData.get("kickoffTime") as string,
+        matchweek: formData.get("matchweek") as string,
+        isHomeMatch: formData.get("isHomeMatch") === "on",
+        status: (formData.get("status") as string) || "scheduled",
+        homeScore: isNaN(homeScoreRaw) ? undefined : homeScoreRaw,
+        awayScore: isNaN(awayScoreRaw) ? undefined : awayScoreRaw,
+      },
+    });
+    revalidatePath("/club-admin/matches");
+    revalidatePath(`/club-admin/matches/${id}`);
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -368,6 +515,8 @@ export async function createNewsAction(_prev: unknown, formData: FormData) {
         slug,
         excerpt: formData.get("excerpt") as string,
         excerptEn: formData.get("excerptEn") as string,
+        content: parseRichText(formData, "content"),
+        contentEn: parseRichText(formData, "contentEn"),
         author: (formData.get("author") as string) || "Ομάδα Επικοινωνίας",
         authorEn: (formData.get("authorEn") as string) || "Club Media Team",
         status: (formData.get("status") as string) || "draft",
@@ -419,6 +568,39 @@ export async function createStaffAction(_prev: unknown, formData: FormData) {
   }
 }
 
+export async function updateStaffAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = (formData.get("id") as string)?.trim();
+    const firstName = (formData.get("firstName") as string)?.trim();
+    const lastName = (formData.get("lastName") as string)?.trim();
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    if (!firstName || !lastName) return { error: "Το όνομα και το επώνυμο είναι υποχρεωτικά." };
+
+    await payload.update({
+      collection: "staff",
+      id,
+      data: {
+        firstName,
+        lastName,
+        fullName: `${firstName} ${lastName}`,
+        firstNameEn: (formData.get("firstNameEn") as string)?.trim() || undefined,
+        lastNameEn: (formData.get("lastNameEn") as string)?.trim() || undefined,
+        roleTitle: formData.get("roleTitle") as string,
+        roleTitleEn: formData.get("roleTitleEn") as string,
+        status: (formData.get("status") as string) || "active",
+        biography: parseRichText(formData, "biography"),
+        biographyEn: parseRichText(formData, "biographyEn"),
+      },
+    });
+    revalidatePath("/club-admin/staff");
+    revalidatePath(`/club-admin/staff/${id}`);
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
 // ─── ROSTERS ─────────────────────────────────────────────────────────────────
 
 export async function createRosterAction(_prev: unknown, formData: FormData) {
@@ -446,6 +628,41 @@ export async function createRosterAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/rosters");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateRosterAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    const season = formData.get("season") as string;
+    const team = formData.get("team") as string;
+    const player = formData.get("player") as string;
+
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    if (!season || !team || !player) {
+      return { error: "Η σεζόν, η ομάδα και ο παίκτης είναι υποχρεωτικά." };
+    }
+
+    await payload.update({
+      collection: "rosters",
+      id,
+      data: {
+        season,
+        team,
+        player,
+        shirtNumber: parseInt(formData.get("shirtNumber") as string) || undefined,
+        status: (formData.get("status") as string) || "active",
+        isCaptain: formData.get("isCaptain") === "on",
+        isViceCaptain: formData.get("isViceCaptain") === "on",
+        joinedDate: (formData.get("joinedDate") as string) || undefined,
+      },
+    });
+    revalidatePath("/club-admin/rosters");
+    revalidatePath(`/club-admin/rosters/${id}`);
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -505,6 +722,8 @@ export async function updatePlayerAction(_prev: unknown, formData: FormData) {
         heightCm: isNaN(heightRaw) ? undefined : heightRaw,
         weightKg: isNaN(weightRaw) ? undefined : weightRaw,
         profileImage: profileImageId,
+        biography: parseRichText(formData, "biography"),
+        biographyEn: parseRichText(formData, "biographyEn"),
       },
     });
 
@@ -539,6 +758,8 @@ export async function updateNewsAction(_prev: unknown, formData: FormData) {
         titleEn: (formData.get("titleEn") as string)?.trim() || undefined,
         excerpt: (formData.get("excerpt") as string)?.trim() || undefined,
         excerptEn: (formData.get("excerptEn") as string)?.trim() || undefined,
+        content: parseRichText(formData, "content"),
+        contentEn: parseRichText(formData, "contentEn"),
         author: (formData.get("author") as string)?.trim() || "Ομάδα Επικοινωνίας",
         authorEn: (formData.get("authorEn") as string)?.trim() || "Club Media Team",
         status: (formData.get("status") as string) || "draft",
