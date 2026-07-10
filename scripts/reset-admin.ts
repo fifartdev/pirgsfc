@@ -29,7 +29,7 @@ async function main() {
 
   console.log(`Found ${docs.length} user(s):\n`);
   for (const user of docs) {
-    const email = (user as { email: string }).email;
+    const email = (user as unknown as { email: string }).email;
     const role = (user as { role?: string }).role ?? "(no role field)";
     console.log(`  • ${email}  [role: ${role}]`);
 
