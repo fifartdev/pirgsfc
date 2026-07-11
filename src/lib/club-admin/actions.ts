@@ -507,7 +507,8 @@ export async function createNewsAction(_prev: unknown, formData: FormData) {
       .replace(/(^-|-$)/g, "")
       + `-${Date.now()}`;
 
-    const featuredImageId = (formData.get("featuredImage") as string)?.trim() || undefined;
+    const featuredImageIdRaw = (formData.get("featuredImage") as string)?.trim();
+    const featuredImageId = featuredImageIdRaw ? Number(featuredImageIdRaw) : undefined;
 
     await payload.create({
       collection: "news",
@@ -702,7 +703,8 @@ export async function updatePlayerAction(_prev: unknown, formData: FormData) {
     const lastName = (formData.get("lastName") as string)?.trim();
     if (!firstName || !lastName) return { error: "Το όνομα και το επώνυμο είναι υποχρεωτικά." };
 
-    const profileImageId = (formData.get("profileImage") as string)?.trim() || null;
+    const profileImageIdRaw = (formData.get("profileImage") as string)?.trim();
+    const profileImageId = profileImageIdRaw ? Number(profileImageIdRaw) : null;
     const heightRaw = parseInt(formData.get("heightCm") as string);
     const weightRaw = parseInt(formData.get("weightKg") as string);
     const shirtRaw = parseInt(formData.get("defaultShirtNumber") as string);
@@ -749,7 +751,8 @@ export async function updateNewsAction(_prev: unknown, formData: FormData) {
     const title = (formData.get("title") as string)?.trim();
     if (!title) return { error: "Ο τίτλος είναι υποχρεωτικός." };
 
-    const featuredImageId = (formData.get("featuredImage") as string)?.trim() || null;
+    const featuredImageIdRaw = (formData.get("featuredImage") as string)?.trim();
+    const featuredImageId = featuredImageIdRaw ? Number(featuredImageIdRaw) : null;
     const readingTimeRaw = parseInt(formData.get("readingTime") as string);
     const publishedDate = (formData.get("publishedDate") as string)?.trim() || undefined;
 
