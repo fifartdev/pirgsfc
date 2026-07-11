@@ -28,6 +28,18 @@ import { SeoDefaults } from "./src/globals/SeoDefaults";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+// Origins allowed to authenticate via the payload-token cookie. A single
+// static NEXT_PUBLIC_SERVER_URL can't track Vercel preview deployments,
+// which get a unique *.vercel.app URL per build — without VERCEL_URL here,
+// the cookie's Origin check silently fails and every write request (e.g.
+// media uploads) comes back "not allowed to perform this action".
+const allowedOrigins = [
+  process.env.NEXT_PUBLIC_SERVER_URL,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
+  process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
+  "http://localhost:3000",
+].filter((url): url is string => Boolean(url));
+
 // Do NOT validate env vars here. Top-level throws cause the module to fail
 // evaluation under Turbopack, making `config` undefined everywhere it is
 // imported and producing a misleading "Cannot destructure property 'config'"
@@ -93,7 +105,7 @@ export default buildConfig({
     }),
   ],
 
-  cors: [process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000"],
+  cors: allowedOrigins,
 
-  csrf: [process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000"],
+  csrf: allowedOrigins,
 });
