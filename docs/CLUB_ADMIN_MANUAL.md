@@ -280,6 +280,7 @@ Path: `/club-admin/news`
    - **Συγγραφέας** — author name in Greek and English
    - **Ημερομηνία δημοσίευσης** — publish date
    - **Κατάσταση** — start with `Πρόχειρο` (draft)
+   - **Κύρια εικόνα άρθρου** — optional featured image. Click **"Επιλογή εικόνας"** to open the file browser and select a JPG, PNG, or WebP file; it uploads immediately and a preview appears. You can also add or replace it later from the edit form.
 3. Click **"Αποθήκευση"**. The article is created and you return to the list.
 
 > Rich text body content (full article text) is not editable in this panel. Contact the superadmin to add or edit article body text.
@@ -288,7 +289,7 @@ Path: `/club-admin/news`
 
 1. Click the pencil icon next to an article.
 2. Update any text fields as needed.
-3. To add a featured image for the article card and header, find the **"Κύρια εικόνα άρθρου"** section:
+3. To add or replace the featured image for the article card and header, find the **"Κύρια εικόνα άρθρου"** section:
    - Click **"Επιλογή εικόνας"** to open the file browser.
    - Select a JPG, PNG, or WebP file. The image uploads immediately and a preview appears.
    - To remove the image click the **×** on the preview.
