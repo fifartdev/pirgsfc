@@ -507,6 +507,8 @@ export async function createNewsAction(_prev: unknown, formData: FormData) {
       .replace(/(^-|-$)/g, "")
       + `-${Date.now()}`;
 
+    const featuredImageId = (formData.get("featuredImage") as string)?.trim() || undefined;
+
     await payload.create({
       collection: "news",
       data: {
@@ -521,6 +523,7 @@ export async function createNewsAction(_prev: unknown, formData: FormData) {
         authorEn: (formData.get("authorEn") as string) || "Club Media Team",
         status: (formData.get("status") as string) || "draft",
         publishedDate: formData.get("publishedDate") as string || undefined,
+        featuredImage: featuredImageId,
       },
     });
     revalidatePath("/club-admin/news");

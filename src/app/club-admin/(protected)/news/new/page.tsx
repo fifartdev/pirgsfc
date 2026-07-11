@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { FormField } from "@/components/club-admin/FormField";
+import { MediaUpload } from "@/components/club-admin/MediaUpload";
 import { RichTextEditor } from "@/components/club-admin/RichTextEditor";
 import { createNewsAction } from "@/lib/club-admin/actions";
 
@@ -33,6 +34,7 @@ export default function NewNewsPage() {
           { value: "published", label: "Δημοσιευμένο" },
           { value: "archived", label: "Αρχειοθετημένο" },
         ]} />
+        <MediaUpload name="featuredImage" label="Κύρια εικόνα άρθρου" />
         <RichTextEditor name="content" label="Περιεχόμενο άρθρου (ελλ.)" />
         <RichTextEditor name="contentEn" label="Περιεχόμενο άρθρου (αγγλ.)" />
         <div className="flex gap-3 pt-2">
