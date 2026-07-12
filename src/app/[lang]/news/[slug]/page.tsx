@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
@@ -86,6 +87,26 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </AnimatedReveal>
         </Container>
       </section>
+
+      {/* Featured image */}
+      {article.imageUrl && (
+        <section className="relative pb-16">
+          <Container className="max-w-4xl">
+            <AnimatedReveal>
+              <div className="relative aspect-video overflow-hidden rounded-3xl shadow-card">
+                <Image
+                  src={article.imageUrl}
+                  alt={article.imageAlt ?? article.title[lang]}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 896px"
+                  priority
+                  className="object-cover"
+                />
+              </div>
+            </AnimatedReveal>
+          </Container>
+        </section>
+      )}
 
       {/* Article body */}
       <section className="relative pb-20">

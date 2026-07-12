@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
@@ -66,6 +67,17 @@ export default async function NewsPage({ params }: PageProps) {
               className="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-crimson"
             >
               <article className="gradient-border noise relative overflow-hidden rounded-3xl shadow-card transition-transform duration-300 group-hover:-translate-y-1">
+                {featured.imageUrl && (
+                  <Image
+                    src={featured.imageUrl}
+                    alt={featured.imageAlt ?? featured.title[lang]}
+                    fill
+                    sizes="100vw"
+                    priority
+                    className="object-cover"
+                  />
+                )}
+                <div className="absolute inset-0 bg-linear-to-t from-night via-night/80 to-night/30" aria-hidden="true" />
                 <div className="stadium-lights opacity-50" aria-hidden="true" />
                 <div className="relative grid gap-8 p-8 sm:p-12 lg:grid-cols-[1fr_auto] lg:items-end">
                   <div>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
@@ -7,7 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PlayerCard } from "@/components/cards/PlayerCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { players, getPlayerBySlug, getRelatedPlayers } from "@/data/players";
+import { players, getPlayerBySlug } from "@/data/players";
+import { getCmsPlayerBySlug, getCmsRelatedPlayers } from "@/lib/cms-data";
 import { DEPARTMENT_PATHS } from "@/lib/constants";
 import { getDict, hasLang } from "@/i18n";
 import { formatDateLong, initialsOf, localeHref } from "@/lib/utils";
@@ -42,13 +44,14 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const player = getPlayerBySlug(slug);
+  const [player, related] = await Promise.all([
+    getCmsPlayerBySlug(slug),
+    getCmsRelatedPlayers(slug, 3),
+  ]);
 
   if (!player) {
     notFound();
   }
-
-  const related = getRelatedPlayers(slug, 3);
   const teamHref = localeHref(lang, DEPARTMENT_PATHS[player.department]);
 
   const statItems = [
@@ -87,15 +90,24 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
 
           <div className="mt-10 grid gap-12 lg:grid-cols-[auto_1fr] lg:items-center lg:gap-16">
             <AnimatedReveal>
-              <div
-                className="gradient-border relative mx-auto flex h-64 w-64 items-center justify-center rounded-full shadow-glow-crimson"
-                aria-hidden="true"
-              >
-                <span className="absolute inset-4 rounded-full border border-crimson/20" />
-                <span className="font-display text-7xl font-extrabold text-smoke-bright">
-                  {initialsOf(player.firstName, player.lastName, lang)}
-                </span>
-                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-crimson px-5 py-1.5 font-display text-lg font-extrabold text-white shadow-glow-crimson">
+              <div className="gradient-border relative mx-auto flex h-64 w-64 items-center justify-center overflow-hidden rounded-full shadow-glow-crimson">
+                {player.photoUrl ? (
+                  <Image
+                    src={player.photoUrl}
+                    alt={`${player.firstName[lang]} ${player.lastName[lang]}`}
+                    fill
+                    sizes="256px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <>
+                    <span className="absolute inset-4 rounded-full border border-crimson/20" aria-hidden="true" />
+                    <span className="font-display text-7xl font-extrabold text-smoke-bright" aria-hidden="true">
+                      {initialsOf(player.firstName, player.lastName, lang)}
+                    </span>
+                  </>
+                )}
+                <span className="absolute -bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-crimson px-5 py-1.5 font-display text-lg font-extrabold text-white shadow-glow-crimson">
                   #{player.number}
                 </span>
               </div>

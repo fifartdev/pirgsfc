@@ -1,6 +1,6 @@
 import "server-only";
 import { getPayloadClient } from "@/lib/payload";
-import type { Department, Match, MatchStatus, Competition, NewsArticle } from "@/types";
+import type { Department, Match, MatchStatus, Competition, NewsArticle, Player } from "@/types";
 import {
   matches as staticMatches,
   getUpcomingMatches,
@@ -12,6 +12,12 @@ import {
   getArticleBySlug as staticGetArticle,
   getFeaturedArticle as staticGetFeatured,
 } from "@/data/news";
+import {
+  getPlayerBySlug as staticGetPlayerBySlug,
+  getPlayersByDepartment as staticGetPlayersByDepartment,
+  getFeaturedPlayers as staticGetFeaturedPlayers,
+  getRelatedPlayers as staticGetRelatedPlayers,
+} from "@/data/players";
 
 // ─── Lexical → string[] ───────────────────────────────────────────────────
 type LexNode = { type?: string; text?: string; children?: LexNode[] };
@@ -238,21 +244,61 @@ export async function getCmsTeamLogoUrl(teamSlug: string): Promise<string | unde
   }
 }
 
-/** Profile photo URL for a player by slug, from the Players collection. */
-export async function getCmsPlayerPhotoUrl(playerSlug: string): Promise<string | undefined> {
-  if (process.env.STATIC_EXPORT === "1") return undefined;
+/** Maps player slug → profile photo URL, from the Players collection. */
+async function getCmsPlayerPhotoMap(): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (process.env.STATIC_EXPORT === "1") return map;
   try {
     const payload = await getPayloadClient();
-    if (!payload) return undefined;
+    if (!payload) return map;
     const res = await payload.find({
       collection: "players",
-      where: { slug: { equals: playerSlug } },
-      limit: 1,
+      limit: 200,
       depth: 1,
     });
-    const doc = res.docs[0] as PayloadDoc | undefined;
-    return mediaUrl(doc?.profileImage);
+    for (const doc of res.docs as PayloadDoc[]) {
+      const url = mediaUrl(doc.profileImage);
+      if (url && typeof doc.slug === "string") map.set(doc.slug, url);
+    }
+    return map;
   } catch {
-    return undefined;
+    return map;
   }
+}
+
+function withCmsPhoto(player: Player, photos: Map<string, string>): Player {
+  const photoUrl = photos.get(player.slug);
+  return photoUrl ? { ...player, photoUrl } : player;
+}
+
+/** Roster player by slug, with profile photo overlaid from Payload if present. */
+export async function getCmsPlayerBySlug(slug: string): Promise<Player | undefined> {
+  const base = staticGetPlayerBySlug(slug);
+  if (!base) return undefined;
+  const photos = await getCmsPlayerPhotoMap();
+  return withCmsPhoto(base, photos);
+}
+
+/** Squad for a department, with profile photos overlaid from Payload. */
+export async function getCmsPlayersByDepartment(department: Department): Promise<Player[]> {
+  const [base, photos] = await Promise.all([
+    staticGetPlayersByDepartment(department),
+    getCmsPlayerPhotoMap(),
+  ]);
+  return base.map((p) => withCmsPhoto(p, photos));
+}
+
+/** Featured players for the homepage, with profile photos overlaid from Payload. */
+export async function getCmsFeaturedPlayers(): Promise<Player[]> {
+  const [base, photos] = await Promise.all([staticGetFeaturedPlayers(), getCmsPlayerPhotoMap()]);
+  return base.map((p) => withCmsPhoto(p, photos));
+}
+
+/** Related players for a roster detail page, with profile photos overlaid from Payload. */
+export async function getCmsRelatedPlayers(slug: string, count = 3): Promise<Player[]> {
+  const [base, photos] = await Promise.all([
+    staticGetRelatedPlayers(slug, count),
+    getCmsPlayerPhotoMap(),
+  ]);
+  return base.map((p) => withCmsPhoto(p, photos));
 }

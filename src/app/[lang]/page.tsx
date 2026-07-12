@@ -10,8 +10,7 @@ import { LatestNews } from "@/components/sections/LatestNews";
 import { SponsorsStrip } from "@/components/sections/SponsorsStrip";
 import { FanCTA } from "@/components/sections/FanCTA";
 import { getNextMatch, getRecentResults } from "@/data/matches";
-import { getFeaturedPlayers } from "@/data/players";
-import { getCmsLatestArticles } from "@/lib/cms-data";
+import { getCmsLatestArticles, getCmsFeaturedPlayers } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 
 interface HomePageProps {
@@ -25,8 +24,10 @@ export default async function HomePage({ params }: HomePageProps) {
   const dict = getDict(lang);
   const nextMatch = getNextMatch("men");
   const recentResults = getRecentResults(3);
-  const featuredPlayers = getFeaturedPlayers();
-  const latestArticles = await getCmsLatestArticles(3);
+  const [featuredPlayers, latestArticles] = await Promise.all([
+    getCmsFeaturedPlayers(),
+    getCmsLatestArticles(3),
+  ]);
 
   return (
     <>

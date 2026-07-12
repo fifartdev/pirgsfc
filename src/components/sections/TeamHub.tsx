@@ -7,7 +7,7 @@ import Image from "next/image";
 import { getPlayersByDepartment } from "@/data/players";
 import { getUpcomingMatches, getCompletedMatches } from "@/data/matches";
 import { getDict } from "@/i18n";
-import type { Department, Lang, Match } from "@/types";
+import type { Department, Lang, Match, Player } from "@/types";
 
 interface TeamHubProps {
   lang: Lang;
@@ -20,12 +20,14 @@ interface TeamHubProps {
   matches?: Match[];
   /** Team logo URL from CMS media. */
   logoUrl?: string;
+  /** Pre-fetched squad from CMS (with profile photos); falls back to static data when omitted. */
+  players?: Player[];
 }
 
 /** Shared page body for the men's, women's, and futsal team sections. */
-export function TeamHub({ lang, department, eyebrow, title, titleAccent, text, matches, logoUrl }: TeamHubProps) {
+export function TeamHub({ lang, department, eyebrow, title, titleAccent, text, matches, logoUrl, players }: TeamHubProps) {
   const dict = getDict(lang);
-  const squad = getPlayersByDepartment(department);
+  const squad = players ?? getPlayersByDepartment(department);
   const deptMatches = matches ?? [
     ...getUpcomingMatches(department),
     ...getCompletedMatches(department).slice(0, 2),

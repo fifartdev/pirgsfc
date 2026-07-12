@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TeamHub } from "@/components/sections/TeamHub";
 import { getDict, hasLang } from "@/i18n";
-import { getCmsMatches, getCmsTeamLogoUrl } from "@/lib/cms-data";
+import { getCmsMatches, getCmsTeamLogoUrl, getCmsPlayersByDepartment } from "@/lib/cms-data";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -24,9 +24,10 @@ export default async function MenPage({ params }: PageProps) {
   const dict = getDict(lang);
 
   const [titleWord, ...rest] = dict.teams.menTitle.split(" ");
-  const [matches, logoUrl] = await Promise.all([
+  const [matches, logoUrl, players] = await Promise.all([
     getCmsMatches("men"),
     getCmsTeamLogoUrl("pyrgos-afc-men"),
+    getCmsPlayersByDepartment("men"),
   ]);
   return (
     <TeamHub
@@ -38,6 +39,7 @@ export default async function MenPage({ params }: PageProps) {
       text={dict.teams.menText}
       matches={matches}
       logoUrl={logoUrl}
+      players={players}
     />
   );
 }
