@@ -5,12 +5,17 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "npm run migrate:deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "export": "bash scripts/export-static.sh",
     "seed": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/seed.ts",
     "reset-admin": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/reset-admin.ts",
-    "generate:types": "payload generate:types"
+    "generate:types": "payload generate:types",
+    "migrate:create": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/migrate.ts migrate:create",
+    "migrate": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/migrate.ts migrate",
+    "migrate:status": "node --env-file=.env.local --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/migrate.ts migrate:status",
+    "migrate:deploy": "node --require ./scripts/preload-next-env.cjs -r tsx/cjs scripts/migrate.ts migrate"
   },
   "dependencies": {
     "@lexical/link": "0.41.0",
