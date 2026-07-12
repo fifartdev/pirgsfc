@@ -21,6 +21,7 @@ export interface NewsEditData {
   status?: string;
   publishedDate?: string;
   readingTime?: number;
+  featured?: boolean;
   featuredImageId?: string;
   featuredImageUrl?: string;
 }
@@ -117,6 +118,14 @@ export function EditNewsForm({ article }: { article: NewsEditData }) {
           name="publishedDate"
           type="date"
           defaultValue={article.publishedDate}
+        />
+
+        <FormField
+          label="Προβεβλημένο άρθρο (εμφανίζεται πρώτο στη σελίδα Νέα)"
+          name="featured"
+          type="checkbox"
+          defaultValue={article.featured}
+          hint="Μόνο ένα άρθρο μπορεί να είναι προβεβλημένο — η επιλογή αφαιρείται αυτόματα από όποιο άλλο άρθρο ήταν προβεβλημένο."
         />
 
         <MediaUpload

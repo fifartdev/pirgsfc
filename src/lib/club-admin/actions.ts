@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPayloadClient } from "@/lib/payload";
+import { LANGS } from "@/i18n";
 
 function parseRichText(formData: FormData, key: string): unknown {
   const raw = formData.get(key);
@@ -12,6 +13,34 @@ function parseRichText(formData: FormData, key: string): unknown {
     return JSON.parse(raw);
   } catch {
     return undefined;
+  }
+}
+
+// ─── Public site revalidation ──────────────────────────────────────────────
+// Payload's local API writes bypass Next's fetch/route cache entirely, so a
+// mutation here is invisible on the public site until something explicitly
+// calls revalidatePath on the public route that renders it. Every collection
+// gets an entry below, even ones with no public page today, so wiring up a
+// new public consumer later can't silently reintroduce this bug.
+const PUBLIC_PATHS = {
+  seasons: [],
+  teams: ["/men", "/women", "/futsal"],
+  leagues: [],
+  players: [],
+  venues: ["/matches", "/men", "/women", "/futsal"],
+  matches: ["/matches", "/men", "/women", "/futsal"],
+  news: ["", "/news"],
+  staff: [],
+  rosters: [],
+} satisfies Record<string, string[]>;
+
+function revalidatePublic(
+  collection: keyof typeof PUBLIC_PATHS,
+  extraPaths: (string | undefined)[] = []
+) {
+  const paths = [...PUBLIC_PATHS[collection], ...extraPaths.filter((p): p is string => Boolean(p))];
+  for (const lang of LANGS) {
+    for (const path of paths) revalidatePath(`/${lang}${path}`);
   }
 }
 
@@ -106,6 +135,7 @@ export async function createSeasonAction(_prev: unknown, formData: FormData) {
     });
 
     revalidatePath("/club-admin/seasons");
+    revalidatePublic("seasons");
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Σφάλμα αποθήκευσης.";
@@ -135,6 +165,7 @@ export async function updateSeasonAction(_prev: unknown, formData: FormData) {
     });
 
     revalidatePath("/club-admin/seasons");
+    revalidatePublic("seasons");
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Σφάλμα ενημέρωσης.";
@@ -147,6 +178,7 @@ export async function deleteSeasonAction(id: string) {
     const { payload } = await getAuthenticatedPayload();
     await payload.delete({ collection: "seasons", id });
     revalidatePath("/club-admin/seasons");
+    revalidatePublic("seasons");
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Σφάλμα διαγραφής.";
@@ -164,6 +196,7 @@ export async function deleteDocumentAction(
     const { payload } = await getAuthenticatedPayload();
     await payload.delete({ collection, id });
     revalidatePath(`/club-admin/${collection}`);
+    revalidatePublic(collection);
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Σφάλμα διαγραφής.";
@@ -198,6 +231,7 @@ export async function createTeamAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/teams");
+    revalidatePublic("teams");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -226,6 +260,7 @@ export async function updateTeamAction(_prev: unknown, formData: FormData) {
     });
     revalidatePath("/club-admin/teams");
     revalidatePath(`/club-admin/teams/${id}`);
+    revalidatePublic("teams");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -261,6 +296,7 @@ export async function createLeagueAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/leagues");
+    revalidatePublic("leagues");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -290,6 +326,7 @@ export async function updateLeagueAction(_prev: unknown, formData: FormData) {
     });
     revalidatePath("/club-admin/leagues");
     revalidatePath(`/club-admin/leagues/${id}`);
+    revalidatePublic("leagues");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -330,6 +367,7 @@ export async function createPlayerAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/players");
+    revalidatePublic("players");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -365,6 +403,7 @@ export async function createVenueAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/venues");
+    revalidatePublic("venues");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -395,6 +434,7 @@ export async function updateVenueAction(_prev: unknown, formData: FormData) {
     });
     revalidatePath("/club-admin/venues");
     revalidatePath(`/club-admin/venues/${id}`);
+    revalidatePublic("venues");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -436,6 +476,7 @@ export async function createMatchAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/matches");
+    revalidatePublic("matches");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -484,6 +525,7 @@ export async function updateMatchAction(_prev: unknown, formData: FormData) {
     });
     revalidatePath("/club-admin/matches");
     revalidatePath(`/club-admin/matches/${id}`);
+    revalidatePublic("matches");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -525,9 +567,11 @@ export async function createNewsAction(_prev: unknown, formData: FormData) {
         status: (formData.get("status") as string) || "draft",
         publishedDate: formData.get("publishedDate") as string || undefined,
         featuredImage: featuredImageId,
+        featured: formData.get("featured") === "on",
       },
     });
     revalidatePath("/club-admin/news");
+    revalidatePublic("news", [`/news/${slug}`]);
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -566,6 +610,7 @@ export async function createStaffAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/staff");
+    revalidatePublic("staff");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -599,6 +644,7 @@ export async function updateStaffAction(_prev: unknown, formData: FormData) {
     });
     revalidatePath("/club-admin/staff");
     revalidatePath(`/club-admin/staff/${id}`);
+    revalidatePublic("staff");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -632,6 +678,7 @@ export async function createRosterAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/rosters");
+    revalidatePublic("rosters");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -667,6 +714,7 @@ export async function updateRosterAction(_prev: unknown, formData: FormData) {
     });
     revalidatePath("/club-admin/rosters");
     revalidatePath(`/club-admin/rosters/${id}`);
+    revalidatePublic("rosters");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -678,12 +726,13 @@ export async function updateRosterAction(_prev: unknown, formData: FormData) {
 export async function publishNewsAction(id: string, publish: boolean) {
   try {
     const { payload } = await getAuthenticatedPayload();
-    await payload.update({
+    const doc = await payload.update({
       collection: "news",
       id,
       data: { status: publish ? "published" : "draft" },
     });
     revalidatePath("/club-admin/news");
+    revalidatePublic("news", [typeof doc.slug === "string" ? `/news/${doc.slug}` : undefined]);
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Σφάλμα.";
@@ -734,6 +783,7 @@ export async function updatePlayerAction(_prev: unknown, formData: FormData) {
 
     revalidatePath("/club-admin/players");
     revalidatePath(`/club-admin/players/${id}`);
+    revalidatePublic("players");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -756,7 +806,7 @@ export async function updateNewsAction(_prev: unknown, formData: FormData) {
     const readingTimeRaw = parseInt(formData.get("readingTime") as string);
     const publishedDate = (formData.get("publishedDate") as string)?.trim() || undefined;
 
-    await payload.update({
+    const doc = await payload.update({
       collection: "news",
       id,
       data: {
@@ -772,11 +822,13 @@ export async function updateNewsAction(_prev: unknown, formData: FormData) {
         publishedDate,
         readingTime: isNaN(readingTimeRaw) ? 3 : readingTimeRaw,
         featuredImage: featuredImageId,
+        featured: formData.get("featured") === "on",
       },
     });
 
     revalidatePath("/club-admin/news");
     revalidatePath(`/club-admin/news/${id}`);
+    revalidatePublic("news", [typeof doc.slug === "string" ? `/news/${doc.slug}` : undefined]);
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };

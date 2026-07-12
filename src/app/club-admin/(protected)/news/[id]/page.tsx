@@ -33,6 +33,7 @@ export default async function EditNewsPage({ params }: { params: Promise<{ id: s
       status: (doc.status as string | undefined) ?? "draft",
       publishedDate,
       readingTime: (doc.readingTime as number | undefined) ?? 3,
+      featured: Boolean(doc.featured),
       featuredImageId: img?.id != null ? String(img.id) : undefined,
       featuredImageUrl: img?.url ?? undefined,
     };

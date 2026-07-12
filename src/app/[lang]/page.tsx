@@ -11,7 +11,7 @@ import { SponsorsStrip } from "@/components/sections/SponsorsStrip";
 import { FanCTA } from "@/components/sections/FanCTA";
 import { getNextMatch, getRecentResults } from "@/data/matches";
 import { getFeaturedPlayers } from "@/data/players";
-import { getLatestArticles } from "@/data/news";
+import { getCmsLatestArticles } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 
 interface HomePageProps {
@@ -26,7 +26,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const nextMatch = getNextMatch("men");
   const recentResults = getRecentResults(3);
   const featuredPlayers = getFeaturedPlayers();
-  const latestArticles = getLatestArticles(3);
+  const latestArticles = await getCmsLatestArticles(3);
 
   return (
     <>

@@ -28,18 +28,21 @@ export function FormField({
 
   if (type === "checkbox") {
     return (
-      <label className="flex cursor-pointer items-center gap-3">
-        <input
-          type="checkbox"
-          name={name}
-          defaultChecked={Boolean(defaultValue)}
-          className="h-4 w-4 rounded border-white/20 bg-white/10 accent-red-600"
-        />
-        <span className="text-sm text-gray-300">
-          {label}
-          {required && <span className="ml-1 text-red-500">*</span>}
-        </span>
-      </label>
+      <div>
+        <label className="flex cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
+            name={name}
+            defaultChecked={Boolean(defaultValue)}
+            className="h-4 w-4 rounded border-white/20 bg-white/10 accent-red-600"
+          />
+          <span className="text-sm text-gray-300">
+            {label}
+            {required && <span className="ml-1 text-red-500">*</span>}
+          </span>
+        </label>
+        {hint && <p className="mt-1 ml-7 text-xs text-gray-500">{hint}</p>}
+      </div>
     );
   }
 

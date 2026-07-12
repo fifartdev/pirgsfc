@@ -106,6 +106,7 @@ function mapNews(doc: PayloadDoc, withContent: boolean): NewsArticle {
     },
     date: String(doc.publishedDate ?? "").slice(0, 10),
     readingTime: Number(doc.readingTime ?? 3),
+    featured: Boolean(doc.featured),
     content: withContent
       ? { el: extractParagraphs(doc.content), en: extractParagraphs(doc.contentEn) }
       : { el: [], en: [] },
@@ -180,9 +181,16 @@ export async function getCmsNewsArticles(): Promise<NewsArticle[]> {
   }
 }
 
+/** The article marked "featured" in club-admin, or the most recent one if none is marked. */
 export async function getCmsFeaturedArticle(): Promise<NewsArticle> {
   const articles = await getCmsNewsArticles();
-  return articles[0] ?? staticGetFeatured();
+  return articles.find((a) => a.featured) ?? articles[0] ?? staticGetFeatured();
+}
+
+/** The `count` most recent published articles, newest first. */
+export async function getCmsLatestArticles(count = 3): Promise<NewsArticle[]> {
+  const articles = await getCmsNewsArticles();
+  return articles.slice(0, count);
 }
 
 export async function getCmsNewsArticle(slug: string): Promise<NewsArticle | null> {

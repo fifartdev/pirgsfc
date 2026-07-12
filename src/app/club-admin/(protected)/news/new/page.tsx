@@ -34,6 +34,12 @@ export default function NewNewsPage() {
           { value: "published", label: "Δημοσιευμένο" },
           { value: "archived", label: "Αρχειοθετημένο" },
         ]} />
+        <FormField
+          label="Προβεβλημένο άρθρο (εμφανίζεται πρώτο στη σελίδα Νέα)"
+          name="featured"
+          type="checkbox"
+          hint="Μόνο ένα άρθρο μπορεί να είναι προβεβλημένο — η επιλογή αφαιρείται αυτόματα από όποιο άλλο άρθρο ήταν προβεβλημένο."
+        />
         <MediaUpload name="featuredImage" label="Κύρια εικόνα άρθρου" />
         <RichTextEditor name="content" label="Περιεχόμενο άρθρου (ελλ.)" />
         <RichTextEditor name="contentEn" label="Περιεχόμενο άρθρου (αγγλ.)" />

@@ -17,6 +17,24 @@ export const News: CollectionConfig = {
   versions: {
     drafts: true,
   },
+  hooks: {
+    // Only one article may be featured at a time — marking one as featured
+    // unmarks any other, regardless of whether the change came from the
+    // club-admin panel or the Payload admin UI directly.
+    afterChange: [
+      async ({ doc, req }) => {
+        if (doc.featured) {
+          await req.payload.update({
+            collection: "news",
+            where: { and: [{ id: { not_equals: doc.id } }, { featured: { equals: true } }] },
+            data: { featured: false },
+            req,
+          });
+        }
+        return doc;
+      },
+    ],
+  },
   fields: [
     // Title / slug
     { name: "title", label: "Τίτλος (ελλ.)", type: "text", required: true },
@@ -100,6 +118,15 @@ export const News: CollectionConfig = {
       required: true,
     },
     { name: "readingTime", label: "Χρόνος ανάγνωσης (λεπτά)", type: "number", defaultValue: 3, min: 1 },
+    {
+      name: "featured",
+      label: "Προβεβλημένο (εμφανίζεται πρώτο στα Νέα)",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        description: "Μόνο ένα άρθρο μπορεί να είναι προβεβλημένο — η επιλογή του αφαιρείται αυτόματα από τυχόν άλλο άρθρο.",
+      },
+    },
 
     // Relations
     {

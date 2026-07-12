@@ -229,10 +229,6 @@ export function getArticleBySlug(slug: string): NewsArticle | undefined {
   return newsArticles.find((a) => a.slug === slug);
 }
 
-export function getLatestArticles(count = 3): NewsArticle[] {
-  return [...newsArticles].sort((a, b) => b.date.localeCompare(a.date)).slice(0, count);
-}
-
 export function getFeaturedArticle(): NewsArticle {
   return newsArticles.find((a) => a.featured) ?? newsArticles[0];
 }

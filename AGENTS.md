@@ -37,6 +37,24 @@ revert this to a single hardcoded origin.
 vars (Production) — it's independently used as Payload's `serverURL` config
 (admin-panel/absolute URL generation), separate from the CORS/CSRF allowlist.
 
+## Every club-admin mutation must revalidate the public site, not just itself
+
+Payload's local API (`payload.create`/`payload.update`/`payload.delete`) writes
+straight to Postgres — it doesn't go through Next's fetch cache, so Next has
+no idea a public page's underlying data just changed. Calling
+`revalidatePath("/club-admin/<collection>")` only busts the cache for the
+admin panel's own list/detail views; the public `/[lang]/...` routes stay
+stale until the next deploy unless something explicitly revalidates them too.
+
+This bit us with News: an article published via club-admin didn't show up on
+`/news` because `createNewsAction`/`updateNewsAction` only revalidated
+`/club-admin/news`. Every mutating action in `src/lib/club-admin/actions.ts`
+now also calls the shared `revalidatePublic(collection, extraPaths?)` helper,
+which revalidates every public path in `PUBLIC_PATHS` for both locales (`el`,
+`en`). **When you wire a new collection to a public page, add its paths to
+`PUBLIC_PATHS`** — don't just add a new `revalidatePath("/club-admin/...")`
+call and assume the public site will pick it up.
+
 ## Postgres SSL mode
 
 `DATABASE_URI` uses `sslmode=verify-full` (not `require`) — `pg-connection-string`
