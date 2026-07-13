@@ -10,7 +10,13 @@ import { ClubValues } from "@/components/sections/ClubValues";
 import { LatestNews } from "@/components/sections/LatestNews";
 import { SponsorsStrip } from "@/components/sections/SponsorsStrip";
 import { FanCTA } from "@/components/sections/FanCTA";
-import { getCmsLatestArticles, getCmsFeaturedPlayers, getCmsNextMatch, getCmsRecentResults } from "@/lib/cms-data";
+import {
+  getCmsLatestArticles,
+  getCmsFeaturedPlayers,
+  getCmsNextMatch,
+  getCmsRecentResults,
+  getCmsHomeContent,
+} from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { buildAlternates } from "@/lib/utils";
 
@@ -28,11 +34,12 @@ export default async function HomePage({ params }: HomePageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const [nextMatch, recentResults, featuredPlayers, latestArticles] = await Promise.all([
+  const [nextMatch, recentResults, featuredPlayers, latestArticles, homeContent] = await Promise.all([
     getCmsNextMatch("men"),
     getCmsRecentResults(3),
     getCmsFeaturedPlayers(),
     getCmsLatestArticles(3),
+    getCmsHomeContent(),
   ]);
 
   return (
@@ -41,11 +48,11 @@ export default async function HomePage({ params }: HomePageProps) {
         lang={lang}
         nextMatch={nextMatch}
         strings={{
-          eyebrow: dict.home.heroEyebrow,
-          title1: dict.home.heroTitle1,
-          titleAccent: dict.home.heroTitleAccent,
-          title2: dict.home.heroTitle2,
-          text: dict.home.heroText,
+          eyebrow: homeContent.heroEyebrow[lang],
+          title1: homeContent.heroTitle1[lang],
+          titleAccent: homeContent.heroTitleAccent[lang],
+          title2: homeContent.heroTitle2[lang],
+          text: homeContent.heroText[lang],
           viewMatches: dict.common.viewMatches,
           meetTheTeam: dict.common.meetTheTeam,
           nextMatch: dict.common.nextMatch,

@@ -5,13 +5,26 @@ import Image from "next/image";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 
 interface MediaUploadProps {
-  name: string;
+  name?: string;
   label: string;
   currentUrl?: string;
   currentId?: string;
+  /** Suppresses the built-in hidden input — for use inside a repeater whose
+   *  own submit-time serialization (e.g. a rowsJson blob) carries the id instead. */
+  hideHiddenInput?: boolean;
+  /** Called after a successful upload/clear — lets a parent (e.g. a repeater
+   *  row) track the id/url in its own state instead of relying on form name. */
+  onUploaded?: (id: string | undefined, url: string | undefined) => void;
 }
 
-export function MediaUpload({ name, label, currentUrl, currentId }: MediaUploadProps) {
+export function MediaUpload({
+  name,
+  label,
+  currentUrl,
+  currentId,
+  hideHiddenInput,
+  onUploaded,
+}: MediaUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(currentUrl);
   const [mediaId, setMediaId] = useState<string | undefined>(currentId);
   const [uploading, setUploading] = useState(false);
@@ -50,6 +63,7 @@ export function MediaUpload({ name, label, currentUrl, currentId }: MediaUploadP
 
       setMediaId(String(json.doc.id));
       setPreviewUrl(json.doc.url);
+      onUploaded?.(String(json.doc.id), json.doc.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Αποτυχία μεταφόρτωσης.");
     } finally {
@@ -61,13 +75,14 @@ export function MediaUpload({ name, label, currentUrl, currentId }: MediaUploadP
     setPreviewUrl(undefined);
     setMediaId(undefined);
     setError(undefined);
+    onUploaded?.(undefined, undefined);
   }
 
   return (
     <div>
       <label className="mb-1.5 block text-xs font-medium text-gray-400">{label}</label>
 
-      <input type="hidden" name={name} value={mediaId ?? ""} />
+      {!hideHiddenInput && <input type="hidden" name={name} value={mediaId ?? ""} />}
 
       <div className="flex flex-col gap-2">
         <div className="relative h-36 w-52 overflow-hidden rounded-lg border border-white/10 bg-white/5">

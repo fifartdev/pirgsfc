@@ -20,7 +20,9 @@
 10. [Matches (Αγώνες)](#10-matches-αγώνες)
 11. [Standings (Βαθμολογία)](#11-standings-βαθμολογία)
 12. [News (Νέα)](#12-news-νέα)
-13. [Important Rules](#13-important-rules)
+13. [Settings (Ρυθμίσεις)](#13-settings-ρυθμίσεις)
+14. [Page Content — Home/About/Contact](#14-page-content--homeaboutcontact)
+15. [Important Rules](#15-important-rules)
 
 ---
 
@@ -274,27 +276,25 @@ Path: `/club-admin/matches`
 
 Path: `/club-admin/standings`
 
-A standings entry is one team's row in the league table for one competition, in one season. The public `/standings` page groups all entries by competition and sorts them by position.
+A league table is one document per competition, per season, holding every team's row together as a single editable table — not one document per team. The public `/standings` page shows one such table per competition, in row order.
 
-> **This is entered by hand, not calculated automatically.** The site only records PYRGOS AFC's own match results — it has no data about matches between other clubs — so there is no way to compute a full league table automatically. Update each team's row yourself from the official league standings whenever they change (after each matchday, typically).
+> **This is entered by hand, not calculated automatically.** The site only records PYRGOS AFC's own match results — it has no data about matches between other clubs — so there is no way to compute a full league table automatically. Update the table yourself from the official league standings whenever they change (after each matchday, typically).
 
-### Create a standings entry
+### Create a league table
 
-1. Click **"Νέα Εγγραφή"**.
-2. Select:
-   - **Σεζόν** — the season this table applies to (required)
-   - **Διοργάνωση** — the competition (required)
-3. Fill in:
-   - **Ομάδα (ελλ. / αγγλ.)** — the team's name (required). This is free text — rival clubs aren't managed elsewhere in this panel.
-   - **Ο PYRGOS AFC** — tick this for PYRGOS AFC's own row. It's highlighted on the public page.
-   - **Θέση** — the team's position/rank in the table (required)
-   - **Αγώνες / Νίκες / Ισοπαλίες / Ήττες** — matches played, won, drawn, lost
-   - **Γκολ υπέρ / Γκολ κατά** — goals for/against
-   - **Βαθμοί** — points
-   - **Σημειώσεις** — optional, e.g. a points deduction; shown under the team's name on the public page
-4. Click **"Αποθήκευση"**.
+1. Click **"Δημιουργία"**.
+2. Select **Σεζόν** and **Διοργάνωση** (both required), then click **"Δημιουργία & συνέχεια"**. This creates an empty table and opens it for editing.
 
-> You need one entry per team in the table, not just PYRGOS AFC's — enter every team's row for the table to display correctly. Only entries belonging to the **current season** (the one marked "Τρέχουσα σεζόν" under Seasons) are shown publicly.
+### Edit a league table
+
+Path: `/club-admin/standings/<id>`
+
+- Click **"Προσθήκη ομάδας"** to add a new row. Each row has: **Ομάδα (ελλ. / αγγλ.)** (free text — rival clubs aren't managed elsewhere in this panel), **Ο PYRGOS AFC** (tick for PYRGOS AFC's own row — highlighted on the public page), **Αγώνες / Νίκες / Ισοπαλίες / Ήττες**, **Γκολ υπέρ / Γκολ κατά**, **Βαθμοί**, and optional **Σημειώσεις** (e.g. a points deduction — shown under the team's name publicly).
+- **The row order IS the standing position** — there's no separate position number to keep in sync. Use the ↑ / ↓ buttons on each row to reorder; the first row is 1st place.
+- Use the trash icon on a row to remove that team, or **"Διαγραφή πίνακα"** at the top to delete the whole table.
+- Click **"Αποθήκευση αλλαγών"** to save. Nothing is written until you save.
+
+> You need one row per team in the table, not just PYRGOS AFC's — add every team for the table to display correctly. Only tables belonging to the **current season** (the one marked "Τρέχουσα σεζόν" under Seasons) are shown publicly.
 
 ### Team stats (separate from standings)
 
@@ -343,7 +343,47 @@ Both the Greek and English rich text body (the full article content) are editabl
 
 ---
 
-## 13. Important Rules
+## 13. Settings (Ρυθμίσεις)
+
+Three screens under the sidebar's **Πληροφορίες Συλλόγου**, **Προεπιλογές SEO**, and (superadmin-only) **Ρυθμίσεις Ιστότοπου** — each edits a single site-wide document, not a list. Saving revalidates every public page immediately.
+
+### Πληροφορίες Συλλόγου — `/club-admin/settings/club-info`
+
+Editable by both club_admin and superadmin. Covers everything the public site's footer, About, and Contact pages read from: official name, logo, club colors, stadium info, contact details, social media links, the "About the club" rich text (Greek/English), **Αξίες συλλόγου** (club values — add/reorder/remove rows, same repeatable-row pattern as Standings), and **Χορηγοί** (sponsors — add/reorder/remove rows, each with its own logo upload).
+
+### Προεπιλογές SEO — `/club-admin/settings/seo`
+
+Editable by both club_admin and superadmin. Default page title/description, the default social-sharing (Open Graph) image, Twitter handle, `robots.txt` directives, and the basic structured-data (JSON-LD) fields used when a specific page doesn't set its own.
+
+### Ρυθμίσεις Ιστότοπου — `/club-admin/settings/site` (superadmin only)
+
+Not shown in the sidebar for club_admin accounts, and the page itself blocks access if visited directly. This is where the sitewide kill-switches live: **Λειτουργία συντήρησης** (maintenance mode) and **Ενεργοποίηση αγγλικής γλώσσας** (the bilingual toggle — see [Bilingual content](#bilingual-content) below), plus Google Analytics ID, the cookie banner toggle, and the announcement bar.
+
+---
+
+## 14. Page Content — Home/About/Contact
+
+Three screens — **Περιεχόμενο Αρχικής**, **Περιεχόμενο — Σχετικά**, **Περιεχόμενο — Επικοινωνία** — for the narrative copy on the homepage, About page, and Contact page. Editable by both club_admin and superadmin.
+
+**Scope: narrative content only, not UI chrome.** These screens cover the prose each page owns directly — hero copy, mission/story text, blurbs, the closing quote on About, department descriptions on Contact. They do **not** cover: shared section headings owned by reusable components (e.g. the "Αξίες συλλόγου"/values heading, edited under [Πληροφορίες Συλλόγου](#13-settings-ρυθμίσεις) instead), button labels, nav labels, or other chrome text — those remain fixed in the site's code.
+
+**Every field is optional and falls back independently.** Leave a field blank and that page keeps showing today's copy — nothing breaks, nothing goes empty. This means it's safe to fill in only the fields you actually want to change. When you open one of these screens, the form is pre-filled with whatever text is *currently live* (your own past edit, or today's default copy if you've never edited it) — not blank fields — so you're always editing the real thing.
+
+### Περιεχόμενο Αρχικής — `/club-admin/content/home`
+
+The homepage hero only: eyebrow, two-part title (with an emphasized middle segment) and body text, in Greek and English. The rest of the homepage (next match, results, departments, players, values, news, sponsors, call-to-action) is either live data or shared content edited elsewhere.
+
+### Περιεχόμενο — Σχετικά — `/club-admin/content/about`
+
+Covers, in order: Hero, Mission (heading + 3 paragraphs), Στατιστικά (the four headline numbers — founding year, player count, age groups, stadium capacity; same value shown in both languages), Ιστορία (heading + a **Χρονολόγιο** timeline — add/reorder/remove events the same way as Standings rows), Γήπεδο blurb, Φίλαθλοι & Κοινότητα blurb, and the closing **Απόφθεγμα** (quote, name, role).
+
+### Περιεχόμενο — Επικοινωνία — `/club-admin/content/contact`
+
+Covers: Hero, the four fixed **Τμήματα Επικοινωνίας** (General/Media/Sponsorships/Academy — each with its own title, description, and contact email), and the heading text above the contact form and the "club details" list. The actual address/phone/main email/social links shown on the page come from [Πληροφορίες Συλλόγου](#13-settings-ρυθμίσεις), not from here.
+
+---
+
+## 15. Important Rules
 
 ### Records are never deleted
 
@@ -366,7 +406,7 @@ Do not delete seasons, players, or matches if they have dependent records (roste
 
 The public website supports Greek (`/el/`) and English (`/en/`). For content to appear in both languages, fill in both the Greek and English fields. If the English field is left blank, the Greek text is used as a fallback on the English version of the site.
 
-English can be turned off site-wide (e.g. while English content isn't ready): every `/en/...` page redirects to the Greek homepage, the language switcher disappears from the header, and English pages are removed from the sitemap so search engines stop offering them. This is the **"Ενεργοποίηση αγγλικής γλώσσας"** setting — currently only changeable by the superadmin in the Payload admin panel (Site Settings), until a club-admin screen for it is built.
+English can be turned off site-wide (e.g. while English content isn't ready): every `/en/...` page redirects to the Greek homepage, the language switcher disappears from the header, and English pages are removed from the sitemap so search engines stop offering them. This is the **"Ενεργοποίηση αγγλικής γλώσσας"** setting, under [Ρυθμίσεις Ιστότοπου](#13-settings-ρυθμίσεις) — superadmin only.
 
 ### Slugs and URLs
 

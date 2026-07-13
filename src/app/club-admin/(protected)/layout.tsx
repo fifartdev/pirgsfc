@@ -16,6 +16,7 @@ export default async function ProtectedClubAdminLayout({
             ? `${user.firstName} ${user.lastName}`
             : user.email
         }
+        role={user.role}
       />
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-8 py-8">{children}</div>

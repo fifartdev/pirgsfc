@@ -731,9 +731,11 @@ export const getCmsSiteSettings = cache(async (): Promise<SiteSettingsData> => {
 });
 
 // ─── Standings ─────────────────────────────────────────────────────────────
-// Manually maintained (src/collections/Standings.ts) — this site only records
-// PYRGOS AFC's own fixtures (see mapMatch above), not every match between
-// rival clubs, so a full multi-team table can't be computed from Matches.
+// Manually maintained (src/collections/LeagueTables.ts) — this site only
+// records PYRGOS AFC's own fixtures (see mapMatch above), not every match
+// between rival clubs, so a full multi-team table can't be computed from
+// Matches. Each LeagueTables document holds one competition/season's whole
+// table as a repeatable `rows` array; row order IS the standing position.
 // No static fallback: there's no precedent demo data for this, so an empty
 // result is the correct "nothing entered yet" state, not an error.
 
@@ -758,7 +760,7 @@ export interface LeagueStandings {
   rows: StandingRow[];
 }
 
-/** Multi-team league tables for the current season, grouped by league, each sorted by position. */
+/** Multi-team league tables for the current season, grouped by league, each sorted by row order. */
 export async function getCmsStandings(): Promise<LeagueStandings[]> {
   if (process.env.STATIC_EXPORT === "1") return [];
   try {
@@ -773,47 +775,58 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
     if (seasonId == null) return [];
 
     const res = await payload.find({
-      collection: "standings",
+      collection: "league-tables",
       where: { season: { equals: seasonId } },
-      sort: "position",
-      limit: 500,
+      limit: 100,
       depth: 1,
     });
 
-    const grouped = new Map<string, LeagueStandings>();
+    type TableRow = {
+      teamName?: string;
+      teamNameEn?: string;
+      isPyrgos?: boolean;
+      played?: number;
+      won?: number;
+      drawn?: number;
+      lost?: number;
+      goalsFor?: number;
+      goalsAgainst?: number;
+      points?: number;
+      notes?: string;
+    };
+
+    const tables: LeagueStandings[] = [];
     for (const doc of res.docs as PayloadDoc[]) {
       const league = doc.league;
       if (!league || typeof league !== "object") continue;
       const l = league as PayloadDoc;
-      const leagueId = String(l.id ?? "");
-      if (!grouped.has(leagueId)) {
-        grouped.set(leagueId, {
-          leagueName: { el: String(l.name ?? ""), en: String(l.nameEn ?? l.name ?? "") },
-          leagueSlug: String(l.slug ?? leagueId),
-          rows: [],
-        });
-      }
-      const goalsFor = Number(doc.goalsFor ?? 0);
-      const goalsAgainst = Number(doc.goalsAgainst ?? 0);
-      grouped.get(leagueId)!.rows.push({
-        teamName: { el: String(doc.teamName ?? ""), en: String(doc.teamNameEn ?? doc.teamName ?? "") },
-        isPyrgos: Boolean(doc.isPyrgos),
-        position: Number(doc.position ?? 0),
-        played: Number(doc.played ?? 0),
-        won: Number(doc.won ?? 0),
-        drawn: Number(doc.drawn ?? 0),
-        lost: Number(doc.lost ?? 0),
-        goalsFor,
-        goalsAgainst,
-        goalDifference: goalsFor - goalsAgainst,
-        points: Number(doc.points ?? 0),
-        notes: typeof doc.notes === "string" && doc.notes ? doc.notes : undefined,
+      const rows = (Array.isArray(doc.rows) ? (doc.rows as TableRow[]) : []).map(
+        (row, index): StandingRow => {
+          const goalsFor = Number(row.goalsFor ?? 0);
+          const goalsAgainst = Number(row.goalsAgainst ?? 0);
+          return {
+            teamName: { el: String(row.teamName ?? ""), en: String(row.teamNameEn ?? row.teamName ?? "") },
+            isPyrgos: Boolean(row.isPyrgos),
+            position: index + 1,
+            played: Number(row.played ?? 0),
+            won: Number(row.won ?? 0),
+            drawn: Number(row.drawn ?? 0),
+            lost: Number(row.lost ?? 0),
+            goalsFor,
+            goalsAgainst,
+            goalDifference: goalsFor - goalsAgainst,
+            points: Number(row.points ?? 0),
+            notes: typeof row.notes === "string" && row.notes ? row.notes : undefined,
+          };
+        }
+      );
+      tables.push({
+        leagueName: { el: String(l.name ?? ""), en: String(l.nameEn ?? l.name ?? "") },
+        leagueSlug: String(l.slug ?? l.id ?? ""),
+        rows,
       });
     }
-    return [...grouped.values()].map((league) => ({
-      ...league,
-      rows: league.rows.sort((a, b) => a.position - b.position),
-    }));
+    return tables;
   } catch {
     return [];
   }
@@ -867,3 +880,305 @@ export async function getCmsTeamStats(department?: Department): Promise<TeamStat
     points: won * 3 + drawn,
   };
 }
+
+// ─── Page content globals (Home / About / Contact) ────────────────────────
+// Narrative copy only — the fixed hero/mission/story/etc. text these three
+// pages own directly, per the "fixed fields per page, narrative content
+// only" scope. Shared UI chrome (nav labels, button text, section headings
+// owned by reusable components like ClubValues) stays in the static i18n
+// dictionary. Every field falls back independently to the dictionary's
+// current copy when the CMS field is empty, so an unedited global renders
+// identically to today's static page.
+
+function localizedField(cmsEl: unknown, cmsEn: unknown, fallback: LocalizedText): LocalizedText {
+  return {
+    el: typeof cmsEl === "string" && cmsEl ? cmsEl : fallback.el,
+    en: typeof cmsEn === "string" && cmsEn ? cmsEn : fallback.en,
+  };
+}
+
+export interface HomeContentData {
+  heroEyebrow: LocalizedText;
+  heroTitle1: LocalizedText;
+  heroTitleAccent: LocalizedText;
+  heroTitle2: LocalizedText;
+  heroText: LocalizedText;
+}
+
+function staticHomeContent(): HomeContentData {
+  return {
+    heroEyebrow: { el: elDict.home.heroEyebrow, en: enDict.home.heroEyebrow },
+    heroTitle1: { el: elDict.home.heroTitle1, en: enDict.home.heroTitle1 },
+    heroTitleAccent: { el: elDict.home.heroTitleAccent, en: enDict.home.heroTitleAccent },
+    heroTitle2: { el: elDict.home.heroTitle2, en: enDict.home.heroTitle2 },
+    heroText: { el: elDict.home.heroText, en: enDict.home.heroText },
+  };
+}
+
+/** Homepage hero copy from Payload's HomeContent global. */
+export const getCmsHomeContent = cache(async (): Promise<HomeContentData> => {
+  const fallback = staticHomeContent();
+  if (process.env.STATIC_EXPORT === "1") return fallback;
+  try {
+    const payload = await getPayloadClient();
+    if (!payload) return fallback;
+    const doc = (await payload.findGlobal({ slug: "home-content", depth: 0 })) as PayloadDoc;
+    return {
+      heroEyebrow: localizedField(doc.heroEyebrow, doc.heroEyebrowEn, fallback.heroEyebrow),
+      heroTitle1: localizedField(doc.heroTitle1, doc.heroTitle1En, fallback.heroTitle1),
+      heroTitleAccent: localizedField(doc.heroTitleAccent, doc.heroTitleAccentEn, fallback.heroTitleAccent),
+      heroTitle2: localizedField(doc.heroTitle2, doc.heroTitle2En, fallback.heroTitle2),
+      heroText: localizedField(doc.heroText, doc.heroTextEn, fallback.heroText),
+    };
+  } catch {
+    return fallback;
+  }
+});
+
+export interface AboutTimelineItem {
+  year: string;
+  title: LocalizedText;
+  text: LocalizedText;
+}
+
+export interface AboutContentData {
+  eyebrow: LocalizedText;
+  title1: LocalizedText;
+  titleAccent: LocalizedText;
+  heroText: LocalizedText;
+  missionEyebrow: LocalizedText;
+  missionTitle: LocalizedText;
+  mission1: LocalizedText;
+  mission2: LocalizedText;
+  mission3: LocalizedText;
+  statFounded: string;
+  statPlayers: string;
+  statGroups: string;
+  statCapacity: string;
+  storyEyebrow: LocalizedText;
+  storyTitle: LocalizedText;
+  storyText: LocalizedText;
+  timeline: AboutTimelineItem[];
+  stadiumEyebrow: LocalizedText;
+  stadiumTitle: LocalizedText;
+  stadiumText: LocalizedText;
+  fansEyebrow: LocalizedText;
+  fansTitle: LocalizedText;
+  fansText: LocalizedText;
+  fans1: LocalizedText;
+  fans2: LocalizedText;
+  quote: LocalizedText;
+  quoteName: LocalizedText;
+  quoteRole: LocalizedText;
+}
+
+function staticAboutContent(): AboutContentData {
+  return {
+    eyebrow: { el: elDict.about.eyebrow, en: enDict.about.eyebrow },
+    title1: { el: elDict.about.title1, en: enDict.about.title1 },
+    titleAccent: { el: elDict.about.titleAccent, en: enDict.about.titleAccent },
+    heroText: { el: elDict.about.heroText, en: enDict.about.heroText },
+    missionEyebrow: { el: elDict.about.missionEyebrow, en: enDict.about.missionEyebrow },
+    missionTitle: { el: elDict.about.missionTitle, en: enDict.about.missionTitle },
+    mission1: { el: elDict.about.mission1, en: enDict.about.mission1 },
+    mission2: { el: elDict.about.mission2, en: enDict.about.mission2 },
+    mission3: { el: elDict.about.mission3, en: enDict.about.mission3 },
+    // Not sourced from the dictionary — these are currently hardcoded JSX
+    // literals on the About page with no CMS backing at all.
+    statFounded: "2026",
+    statPlayers: "39",
+    statGroups: "9",
+    statCapacity: "12.5K",
+    storyEyebrow: { el: elDict.about.storyEyebrow, en: enDict.about.storyEyebrow },
+    storyTitle: { el: elDict.about.storyTitle, en: enDict.about.storyTitle },
+    storyText: { el: elDict.about.storyText, en: enDict.about.storyText },
+    timeline: elDict.about.timeline.map((item, i) => ({
+      year: item.year,
+      title: { el: item.title, en: enDict.about.timeline[i]?.title ?? item.title },
+      text: { el: item.text, en: enDict.about.timeline[i]?.text ?? item.text },
+    })),
+    stadiumEyebrow: { el: elDict.about.stadiumEyebrow, en: enDict.about.stadiumEyebrow },
+    stadiumTitle: { el: elDict.about.stadiumTitle, en: enDict.about.stadiumTitle },
+    stadiumText: { el: elDict.about.stadiumText, en: enDict.about.stadiumText },
+    fansEyebrow: { el: elDict.about.fansEyebrow, en: enDict.about.fansEyebrow },
+    fansTitle: { el: elDict.about.fansTitle, en: enDict.about.fansTitle },
+    fansText: { el: elDict.about.fansText, en: enDict.about.fansText },
+    fans1: { el: elDict.about.fans1, en: enDict.about.fans1 },
+    fans2: { el: elDict.about.fans2, en: enDict.about.fans2 },
+    quote: { el: elDict.about.quote, en: enDict.about.quote },
+    quoteName: { el: elDict.about.quoteName, en: enDict.about.quoteName },
+    quoteRole: { el: elDict.about.quoteRole, en: enDict.about.quoteRole },
+  };
+}
+
+/** About page narrative copy from Payload's AboutContent global. */
+export const getCmsAboutContent = cache(async (): Promise<AboutContentData> => {
+  const fallback = staticAboutContent();
+  if (process.env.STATIC_EXPORT === "1") return fallback;
+  try {
+    const payload = await getPayloadClient();
+    if (!payload) return fallback;
+    const doc = (await payload.findGlobal({ slug: "about-content", depth: 0 })) as PayloadDoc;
+    const hero = (doc.hero as PayloadDoc) ?? {};
+    const mission = (doc.mission as PayloadDoc) ?? {};
+    const stats = (doc.stats as PayloadDoc) ?? {};
+    const story = (doc.story as PayloadDoc) ?? {};
+    const stadium = (doc.stadium as PayloadDoc) ?? {};
+    const fans = (doc.fans as PayloadDoc) ?? {};
+    const quote = (doc.quote as PayloadDoc) ?? {};
+
+    const timelineDocs = Array.isArray(story.timeline) ? (story.timeline as PayloadDoc[]) : [];
+    const timeline = timelineDocs.length
+      ? timelineDocs
+          .filter((t) => t.year)
+          .map((t) => ({
+            year: String(t.year ?? ""),
+            title: localizedField(t.title, t.titleEn, { el: "", en: "" }),
+            text: localizedField(t.text, t.textEn, { el: "", en: "" }),
+          }))
+      : fallback.timeline;
+
+    return {
+      eyebrow: localizedField(hero.eyebrow, hero.eyebrowEn, fallback.eyebrow),
+      title1: localizedField(hero.title1, hero.title1En, fallback.title1),
+      titleAccent: localizedField(hero.titleAccent, hero.titleAccentEn, fallback.titleAccent),
+      heroText: localizedField(hero.heroText, hero.heroTextEn, fallback.heroText),
+      missionEyebrow: localizedField(mission.missionEyebrow, mission.missionEyebrowEn, fallback.missionEyebrow),
+      missionTitle: localizedField(mission.missionTitle, mission.missionTitleEn, fallback.missionTitle),
+      mission1: localizedField(mission.mission1, mission.mission1En, fallback.mission1),
+      mission2: localizedField(mission.mission2, mission.mission2En, fallback.mission2),
+      mission3: localizedField(mission.mission3, mission.mission3En, fallback.mission3),
+      statFounded: typeof stats.founded === "string" && stats.founded ? stats.founded : fallback.statFounded,
+      statPlayers: typeof stats.players === "string" && stats.players ? stats.players : fallback.statPlayers,
+      statGroups: typeof stats.groups === "string" && stats.groups ? stats.groups : fallback.statGroups,
+      statCapacity: typeof stats.capacity === "string" && stats.capacity ? stats.capacity : fallback.statCapacity,
+      storyEyebrow: localizedField(story.storyEyebrow, story.storyEyebrowEn, fallback.storyEyebrow),
+      storyTitle: localizedField(story.storyTitle, story.storyTitleEn, fallback.storyTitle),
+      storyText: localizedField(story.storyText, story.storyTextEn, fallback.storyText),
+      timeline,
+      stadiumEyebrow: localizedField(stadium.stadiumEyebrow, stadium.stadiumEyebrowEn, fallback.stadiumEyebrow),
+      stadiumTitle: localizedField(stadium.stadiumTitle, stadium.stadiumTitleEn, fallback.stadiumTitle),
+      stadiumText: localizedField(stadium.stadiumText, stadium.stadiumTextEn, fallback.stadiumText),
+      fansEyebrow: localizedField(fans.fansEyebrow, fans.fansEyebrowEn, fallback.fansEyebrow),
+      fansTitle: localizedField(fans.fansTitle, fans.fansTitleEn, fallback.fansTitle),
+      fansText: localizedField(fans.fansText, fans.fansTextEn, fallback.fansText),
+      fans1: localizedField(fans.fans1, fans.fans1En, fallback.fans1),
+      fans2: localizedField(fans.fans2, fans.fans2En, fallback.fans2),
+      quote: localizedField(quote.text, quote.textEn, fallback.quote),
+      quoteName: localizedField(quote.name, quote.nameEn, fallback.quoteName),
+      quoteRole: localizedField(quote.role, quote.roleEn, fallback.quoteRole),
+    };
+  } catch {
+    return fallback;
+  }
+});
+
+export interface ContactDepartmentContent {
+  title: LocalizedText;
+  text: LocalizedText;
+  email: string;
+}
+
+export interface ContactContentData {
+  eyebrow: LocalizedText;
+  title1: LocalizedText;
+  titleAccent: LocalizedText;
+  text: LocalizedText;
+  departments: {
+    general: ContactDepartmentContent;
+    media: ContactDepartmentContent;
+    sponsorships: ContactDepartmentContent;
+    academy: ContactDepartmentContent;
+  };
+  formEyebrow: LocalizedText;
+  formTitle: LocalizedText;
+  formText: LocalizedText;
+  detailsEyebrow: LocalizedText;
+  detailsTitle: LocalizedText;
+}
+
+function staticContactContent(): ContactContentData {
+  return {
+    eyebrow: { el: elDict.contact.eyebrow, en: enDict.contact.eyebrow },
+    title1: { el: elDict.contact.title1, en: enDict.contact.title1 },
+    titleAccent: { el: elDict.contact.titleAccent, en: enDict.contact.titleAccent },
+    text: { el: elDict.contact.text, en: enDict.contact.text },
+    departments: {
+      general: {
+        title: { el: elDict.contact.departments.general.title, en: enDict.contact.departments.general.title },
+        text: { el: elDict.contact.departments.general.text, en: enDict.contact.departments.general.text },
+        email: "hello@pyrgosafc.com",
+      },
+      media: {
+        title: { el: elDict.contact.departments.media.title, en: enDict.contact.departments.media.title },
+        text: { el: elDict.contact.departments.media.text, en: enDict.contact.departments.media.text },
+        email: "media@pyrgosafc.com",
+      },
+      sponsorships: {
+        title: {
+          el: elDict.contact.departments.sponsorships.title,
+          en: enDict.contact.departments.sponsorships.title,
+        },
+        text: { el: elDict.contact.departments.sponsorships.text, en: enDict.contact.departments.sponsorships.text },
+        email: "partners@pyrgosafc.com",
+      },
+      academy: {
+        title: { el: elDict.contact.departments.academy.title, en: enDict.contact.departments.academy.title },
+        text: { el: elDict.contact.departments.academy.text, en: enDict.contact.departments.academy.text },
+        email: "academy@pyrgosafc.com",
+      },
+    },
+    formEyebrow: { el: elDict.contact.formEyebrow, en: enDict.contact.formEyebrow },
+    formTitle: { el: elDict.contact.formTitle, en: enDict.contact.formTitle },
+    formText: { el: elDict.contact.formText, en: enDict.contact.formText },
+    detailsEyebrow: { el: elDict.contact.detailsEyebrow, en: enDict.contact.detailsEyebrow },
+    detailsTitle: { el: elDict.contact.detailsTitle, en: enDict.contact.detailsTitle },
+  };
+}
+
+function contactDepartment(
+  doc: PayloadDoc | undefined,
+  fallback: ContactDepartmentContent
+): ContactDepartmentContent {
+  const d = doc ?? {};
+  return {
+    title: localizedField(d.title, d.titleEn, fallback.title),
+    text: localizedField(d.text, d.textEn, fallback.text),
+    email: typeof d.email === "string" && d.email ? d.email : fallback.email,
+  };
+}
+
+/** Contact page narrative copy from Payload's ContactContent global. */
+export const getCmsContactContent = cache(async (): Promise<ContactContentData> => {
+  const fallback = staticContactContent();
+  if (process.env.STATIC_EXPORT === "1") return fallback;
+  try {
+    const payload = await getPayloadClient();
+    if (!payload) return fallback;
+    const doc = (await payload.findGlobal({ slug: "contact-content", depth: 0 })) as PayloadDoc;
+    const hero = (doc.hero as PayloadDoc) ?? {};
+    const departments = (doc.departments as PayloadDoc) ?? {};
+    const form = (doc.form as PayloadDoc) ?? {};
+    const details = (doc.details as PayloadDoc) ?? {};
+
+    return {
+      eyebrow: localizedField(hero.eyebrow, hero.eyebrowEn, fallback.eyebrow),
+      title1: localizedField(hero.title1, hero.title1En, fallback.title1),
+      titleAccent: localizedField(hero.titleAccent, hero.titleAccentEn, fallback.titleAccent),
+      text: localizedField(hero.text, hero.textEn, fallback.text),
+      departments: {
+        general: contactDepartment(departments.general as PayloadDoc, fallback.departments.general),
+        media: contactDepartment(departments.media as PayloadDoc, fallback.departments.media),
+        sponsorships: contactDepartment(departments.sponsorships as PayloadDoc, fallback.departments.sponsorships),
+        academy: contactDepartment(departments.academy as PayloadDoc, fallback.departments.academy),
+      },
+      formEyebrow: localizedField(form.formEyebrow, form.formEyebrowEn, fallback.formEyebrow),
+      formTitle: localizedField(form.formTitle, form.formTitleEn, fallback.formTitle),
+      formText: localizedField(form.formText, form.formTextEn, fallback.formText),
+      detailsEyebrow: localizedField(details.detailsEyebrow, details.detailsEyebrowEn, fallback.detailsEyebrow),
+      detailsTitle: localizedField(details.detailsTitle, details.detailsTitleEn, fallback.detailsTitle),
+    };
+  } catch {
+    return fallback;
+  }
+});

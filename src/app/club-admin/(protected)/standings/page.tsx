@@ -7,18 +7,16 @@ export const metadata: Metadata = { title: "Βαθμολογία" };
 export default async function StandingsPage() {
   const { payload } = await requireClubAdmin();
   const res = await payload.find({
-    collection: "standings",
-    sort: "position",
+    collection: "league-tables",
+    sort: "-updatedAt",
     limit: 200,
     depth: 1,
   });
 
-  type StandingDoc = {
+  type LeagueTableDoc = {
     id: string;
-    teamName: string;
-    isPyrgos?: boolean;
-    position: number;
-    points: number;
+    rows?: unknown[];
+    updatedAt?: string;
     season?: { title?: string } | number | null;
     league?: { name?: string } | number | null;
   };
@@ -26,7 +24,7 @@ export default async function StandingsPage() {
   return (
     <AdminTable
       title="Βαθμολογία"
-      rows={res.docs as StandingDoc[]}
+      rows={res.docs as LeagueTableDoc[]}
       newHref="/club-admin/standings/new"
       editHref={(r) => `/club-admin/standings/${r.id}`}
       columns={[
@@ -40,15 +38,18 @@ export default async function StandingsPage() {
           label: "Σεζόν",
           render: (r) => (typeof r.season === "object" ? r.season?.title ?? "—" : "—"),
         },
-        { key: "position", label: "Θέση" },
         {
-          key: "teamName",
-          label: "Ομάδα",
-          render: (r) => (r.isPyrgos ? `${r.teamName} (PYRGOS AFC)` : r.teamName),
+          key: "rows",
+          label: "Ομάδες",
+          render: (r) => String(r.rows?.length ?? 0),
         },
-        { key: "points", label: "Βαθμοί" },
+        {
+          key: "updatedAt",
+          label: "Ενημερώθηκε",
+          render: (r) => (r.updatedAt ? new Date(r.updatedAt).toLocaleDateString("el-GR") : "—"),
+        },
       ]}
-      emptyMessage="Δεν βρέθηκαν εγγραφές βαθμολογίας."
+      emptyMessage="Δεν βρέθηκαν πίνακες βαθμολογίας."
     />
   );
 }

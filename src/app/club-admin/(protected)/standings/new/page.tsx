@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { requireClubAdmin } from "@/lib/club-admin/auth";
-import { NewStandingForm } from "./NewStandingForm";
+import { NewLeagueTableForm } from "./NewLeagueTableForm";
 
-export const metadata: Metadata = { title: "Νέα Εγγραφή Βαθμολογίας" };
+export const metadata: Metadata = { title: "Νέος Πίνακας Βαθμολογίας" };
 
 type Option = { value: string; label: string };
 
@@ -11,7 +11,7 @@ const toOptions = <T extends { id: string | number }>(
   labelFn: (d: T) => string
 ): Option[] => docs.map((d) => ({ value: String(d.id), label: labelFn(d) }));
 
-export default async function NewStandingPage() {
+export default async function NewLeagueTablePage() {
   const { payload } = await requireClubAdmin();
 
   const [seasonsRes, leaguesRes] = await Promise.all([
@@ -20,7 +20,7 @@ export default async function NewStandingPage() {
   ]);
 
   return (
-    <NewStandingForm
+    <NewLeagueTableForm
       seasonOptions={toOptions(seasonsRes.docs as { id: string; title: string }[], (d) => d.title)}
       leagueOptions={toOptions(leaguesRes.docs as { id: string; name: string }[], (d) => d.name)}
     />

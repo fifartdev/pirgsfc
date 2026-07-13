@@ -51,7 +51,7 @@ const PUBLIC_PATHS = {
   news: ["", "/news"],
   staff: ["/staff"],
   rosters: ["/men", "/women", "/futsal"],
-  standings: ["/standings"],
+  "league-tables": ["/standings"],
 } satisfies Record<string, string[]>;
 
 function revalidatePublic(
@@ -196,7 +196,7 @@ export async function updateSeasonAction(_prev: unknown, formData: FormData) {
 export async function deleteSeasonAction(id: string) {
   try {
     const { payload, user } = await getAuthenticatedPayload();
-    // Manual (docs/CLUB_ADMIN_MANUAL.md §12): deletion is reserved for
+    // Manual (docs/CLUB_ADMIN_MANUAL.md §15): deletion is reserved for
     // superadmin. club_admin passes the general auth check above but must be
     // rejected here — never delete on their behalf.
     if (user.role !== "superadmin") throw new Error("Forbidden");
@@ -210,15 +210,34 @@ export async function deleteSeasonAction(id: string) {
   }
 }
 
+/**
+ * Dedicated (not the generic deleteDocumentAction below) because that
+ * helper revalidates `/club-admin/${collection}`, but this collection's
+ * club-admin route is `/club-admin/standings`, not `/club-admin/league-tables`.
+ */
+export async function deleteLeagueTableAction(id: string) {
+  try {
+    const { payload, user } = await getAuthenticatedPayload();
+    if (user.role !== "superadmin") throw new Error("Forbidden");
+    await payload.delete({ collection: "league-tables", id });
+    revalidatePath("/club-admin/standings");
+    revalidatePublic("league-tables");
+    return { success: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Σφάλμα διαγραφής.";
+    return { error: msg };
+  }
+}
+
 // ─── GENERIC DELETE ───────────────────────────────────────────────────────────
 
 export async function deleteDocumentAction(
-  collection: "seasons" | "teams" | "leagues" | "players" | "venues" | "matches" | "news" | "staff" | "standings",
+  collection: "seasons" | "teams" | "leagues" | "players" | "venues" | "matches" | "news" | "staff",
   id: string
 ) {
   try {
     const { payload, user } = await getAuthenticatedPayload();
-    // Manual (docs/CLUB_ADMIN_MANUAL.md §12): deletion is reserved for
+    // Manual (docs/CLUB_ADMIN_MANUAL.md §15): deletion is reserved for
     // superadmin. club_admin passes the general auth check above but must be
     // rejected here — never delete on their behalf.
     if (user.role !== "superadmin") throw new Error("Forbidden");
@@ -866,62 +885,449 @@ export async function updateNewsAction(_prev: unknown, formData: FormData) {
   }
 }
 
-// ─── STANDINGS ─────────────────────────────────────────────────────────────
+// ─── LEAGUE TABLES (standings) ─────────────────────────────────────────────
+// One document = one whole table for a league+season; `rows` is a repeatable
+// array edited together in the club-admin UI (see EditLeagueTableForm), sent
+// here serialized as JSON in a single hidden field since FormData has no
+// native way to carry an array of objects.
 
-function parseStandingData(formData: FormData) {
-  return {
-    season: formData.get("season") as string,
-    league: formData.get("league") as string,
-    teamName: (formData.get("teamName") as string)?.trim(),
-    teamNameEn: (formData.get("teamNameEn") as string)?.trim() || undefined,
-    isPyrgos: formData.get("isPyrgos") === "on",
-    position: parseInt(formData.get("position") as string) || undefined,
-    played: statNumber(formData, "played") ?? 0,
-    won: statNumber(formData, "won") ?? 0,
-    drawn: statNumber(formData, "drawn") ?? 0,
-    lost: statNumber(formData, "lost") ?? 0,
-    goalsFor: statNumber(formData, "goalsFor") ?? 0,
-    goalsAgainst: statNumber(formData, "goalsAgainst") ?? 0,
-    points: statNumber(formData, "points") ?? 0,
-    notes: (formData.get("notes") as string)?.trim() || undefined,
-  };
+interface LeagueTableRowInput {
+  teamName: string;
+  teamNameEn?: string;
+  isPyrgos: boolean;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  points: number;
+  notes?: string;
 }
 
-export async function createStandingAction(_prev: unknown, formData: FormData) {
+function parseLeagueTableRows(formData: FormData): LeagueTableRowInput[] | null {
+  const raw = formData.get("rowsJson");
+  if (typeof raw !== "string") return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.map((r) => ({
+      teamName: String(r.teamName ?? "").trim(),
+      teamNameEn: r.teamNameEn ? String(r.teamNameEn).trim() : undefined,
+      isPyrgos: Boolean(r.isPyrgos),
+      played: Number(r.played) || 0,
+      won: Number(r.won) || 0,
+      drawn: Number(r.drawn) || 0,
+      lost: Number(r.lost) || 0,
+      goalsFor: Number(r.goalsFor) || 0,
+      goalsAgainst: Number(r.goalsAgainst) || 0,
+      points: Number(r.points) || 0,
+      notes: r.notes ? String(r.notes).trim() : undefined,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function createLeagueTableAction(_prev: unknown, formData: FormData) {
   try {
     const { payload } = await getAuthenticatedPayload();
-    const data = parseStandingData(formData);
-    if (!data.season || !data.league) {
+    const seasonRaw = formData.get("season") as string;
+    const leagueRaw = formData.get("league") as string;
+    if (!seasonRaw || !leagueRaw) {
       return { error: "Η σεζόν και η διοργάνωση είναι υποχρεωτικές." };
     }
-    if (!data.teamName) return { error: "Το όνομα ομάδας είναι υποχρεωτικό." };
-    if (!data.position) return { error: "Η θέση είναι υποχρεωτική." };
 
-    await payload.create({ collection: "standings", data });
+    // Relationship fields require a number, not the string FormData always
+    // gives us — Payload's numeric-ID validator rejects "42" as invalid.
+    const created = await payload.create({
+      collection: "league-tables",
+      data: { season: Number(seasonRaw), league: Number(leagueRaw), rows: [] },
+    });
     revalidatePath("/club-admin/standings");
-    revalidatePublic("standings");
+    revalidatePublic("league-tables");
+    return { success: true, id: String(created.id) };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateLeagueTableAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    const seasonRaw = formData.get("season") as string;
+    const leagueRaw = formData.get("league") as string;
+    if (!seasonRaw || !leagueRaw) {
+      return { error: "Η σεζόν και η διοργάνωση είναι υποχρεωτικές." };
+    }
+    const rows = parseLeagueTableRows(formData);
+    if (rows === null) return { error: "Μη έγκυρα δεδομένα ομάδων." };
+    if (rows.some((r) => !r.teamName)) {
+      return { error: "Κάθε ομάδα πρέπει να έχει όνομα." };
+    }
+
+    await payload.update({
+      collection: "league-tables",
+      id,
+      data: { season: Number(seasonRaw), league: Number(leagueRaw), rows },
+    });
+    revalidatePath("/club-admin/standings");
+    revalidatePath(`/club-admin/standings/${id}`);
+    revalidatePublic("league-tables");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
   }
 }
 
-export async function updateStandingAction(_prev: unknown, formData: FormData) {
+// ─── SETTINGS GLOBALS (ClubInfo / SeoDefaults / SiteSettings) ──────────────
+// These are Payload "globals" — one document each, edited in place, never
+// created/deleted. They back nearly every public page (Footer, About,
+// Contact, JSON-LD, sitewide toggles), so a save revalidates every page
+// under each locale's root layout rather than a hand-picked path list.
+
+function revalidateEverything() {
+  for (const lang of LANGS) revalidatePath(`/${lang}`, "layout");
+}
+
+function parseJsonArray<T>(formData: FormData, key: string): T[] | null {
+  const raw = formData.get(key);
+  if (typeof raw !== "string" || !raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+interface ClubValueInput {
+  title: string;
+  titleEn?: string;
+  description?: string;
+  descriptionEn?: string;
+}
+
+interface ClubSponsorInput {
+  name: string;
+  tier: string;
+  tagline?: string;
+  taglineEn?: string;
+  url?: string;
+  logo?: string;
+}
+
+export async function updateClubInfoAction(_prev: unknown, formData: FormData) {
   try {
     const { payload } = await getAuthenticatedPayload();
-    const id = formData.get("id") as string;
-    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
-    const data = parseStandingData(formData);
-    if (!data.season || !data.league) {
-      return { error: "Η σεζόν και η διοργάνωση είναι υποχρεωτικές." };
-    }
-    if (!data.teamName) return { error: "Το όνομα ομάδας είναι υποχρεωτικό." };
-    if (!data.position) return { error: "Η θέση είναι υποχρεωτική." };
 
-    await payload.update({ collection: "standings", id, data });
-    revalidatePath("/club-admin/standings");
-    revalidatePath(`/club-admin/standings/${id}`);
-    revalidatePublic("standings");
+    const values = parseJsonArray<ClubValueInput>(formData, "valuesJson");
+    const sponsors = parseJsonArray<ClubSponsorInput>(formData, "sponsorsJson");
+    if (values === null || sponsors === null) return { error: "Μη έγκυρα δεδομένα." };
+    if (values.some((v) => !v.title?.trim())) return { error: "Κάθε αξία πρέπει να έχει τίτλο." };
+    if (sponsors.some((s) => !s.name?.trim())) return { error: "Κάθε χορηγός πρέπει να έχει όνομα." };
+
+    const logoIdRaw = (formData.get("logo") as string)?.trim();
+
+    await payload.updateGlobal({
+      slug: "club-info",
+      data: {
+        name: (formData.get("name") as string)?.trim(),
+        nameEn: (formData.get("nameEn") as string)?.trim(),
+        shortName: (formData.get("shortName") as string)?.trim(),
+        founded: statNumber(formData, "founded"),
+        logo: logoIdRaw ? Number(logoIdRaw) : null,
+        colors: {
+          primary: (formData.get("colorsPrimary") as string)?.trim(),
+          secondary: (formData.get("colorsSecondary") as string)?.trim(),
+          accent: (formData.get("colorsAccent") as string)?.trim(),
+        },
+        stadium: {
+          name: (formData.get("stadiumName") as string)?.trim(),
+          nameEn: (formData.get("stadiumNameEn") as string)?.trim(),
+          capacity: (formData.get("stadiumCapacity") as string)?.trim(),
+          opened: statNumber(formData, "stadiumOpened"),
+        },
+        contact: {
+          email: (formData.get("contactEmail") as string)?.trim(),
+          phone: (formData.get("contactPhone") as string)?.trim(),
+          address: (formData.get("contactAddress") as string)?.trim(),
+          addressEn: (formData.get("contactAddressEn") as string)?.trim(),
+          city: (formData.get("contactCity") as string)?.trim(),
+          postalCode: (formData.get("contactPostalCode") as string)?.trim(),
+        },
+        socialMedia: {
+          instagram: (formData.get("socialInstagram") as string)?.trim(),
+          twitter: (formData.get("socialTwitter") as string)?.trim(),
+          facebook: (formData.get("socialFacebook") as string)?.trim(),
+          youtube: (formData.get("socialYoutube") as string)?.trim(),
+          tiktok: (formData.get("socialTiktok") as string)?.trim(),
+        },
+        about: parseRichText(formData, "about"),
+        aboutEn: parseRichText(formData, "aboutEn"),
+        values,
+        sponsors: sponsors.map((s) => ({ ...s, logo: s.logo ? Number(s.logo) : undefined })),
+      },
+    });
+    revalidateEverything();
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateSeoDefaultsAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const ogImageIdRaw = (formData.get("defaultOgImage") as string)?.trim();
+    const orgLogoIdRaw = (formData.get("organizationLogo") as string)?.trim();
+
+    await payload.updateGlobal({
+      slug: "seo-defaults",
+      data: {
+        titleTemplate: (formData.get("titleTemplate") as string)?.trim(),
+        defaultTitle: (formData.get("defaultTitle") as string)?.trim(),
+        defaultDescription: (formData.get("defaultDescription") as string)?.trim(),
+        defaultOgImage: ogImageIdRaw ? Number(ogImageIdRaw) : null,
+        twitterHandle: (formData.get("twitterHandle") as string)?.trim(),
+        robots: {
+          index: formData.get("robotsIndex") === "on",
+          follow: formData.get("robotsFollow") === "on",
+          additionalDirectives: (formData.get("robotsAdditional") as string)?.trim() || undefined,
+        },
+        structuredData: {
+          organizationName: (formData.get("orgName") as string)?.trim(),
+          organizationUrl: (formData.get("orgUrl") as string)?.trim(),
+          organizationLogo: orgLogoIdRaw ? Number(orgLogoIdRaw) : null,
+          foundingYear: statNumber(formData, "orgFoundingYear"),
+          sport: (formData.get("orgSport") as string)?.trim(),
+          location: (formData.get("orgLocation") as string)?.trim(),
+        },
+      },
+    });
+    revalidateEverything();
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateSiteSettingsAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload, user } = await getAuthenticatedPayload();
+    // Mirrors SiteSettings.ts's Payload access.update = isSuperAdmin. These
+    // are sitewide kill-switches (maintenance mode, bilingual toggle), kept
+    // superadmin-only even though club_admin can reach the other settings
+    // screens (ClubInfo, SeoDefaults).
+    if (user.role !== "superadmin") throw new Error("Forbidden");
+
+    const ogImageIdRaw = (formData.get("defaultOgImage") as string)?.trim();
+
+    await payload.updateGlobal({
+      slug: "site-settings",
+      data: {
+        siteName: (formData.get("siteName") as string)?.trim(),
+        siteUrl: (formData.get("siteUrl") as string)?.trim(),
+        maintenanceMode: formData.get("maintenanceMode") === "on",
+        bilingualEnabled: formData.get("bilingualEnabled") === "on",
+        defaultSeoTitle: (formData.get("defaultSeoTitle") as string)?.trim(),
+        defaultSeoDescription: (formData.get("defaultSeoDescription") as string)?.trim(),
+        defaultOgImage: ogImageIdRaw ? Number(ogImageIdRaw) : null,
+        googleAnalyticsId: (formData.get("googleAnalyticsId") as string)?.trim() || undefined,
+        cookieBannerEnabled: formData.get("cookieBannerEnabled") === "on",
+        nav: {
+          announcementBar: (formData.get("announcementBar") as string)?.trim() || undefined,
+          announcementBarEnabled: formData.get("announcementBarEnabled") === "on",
+        },
+      },
+    });
+    revalidateEverything();
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+// ─── PAGE CONTENT GLOBALS (Home / About / Contact narrative copy) ─────────
+// Fixed fields per page, narrative content only — see the comment atop each
+// globals/*Content.ts file for exactly what's in and out of scope. Same
+// empty-field-falls-back-to-dictionary behavior as everything else here.
+
+function field(formData: FormData, key: string): string {
+  return ((formData.get(key) as string) ?? "").trim();
+}
+
+export async function updateHomeContentAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    await payload.updateGlobal({
+      slug: "home-content",
+      data: {
+        heroEyebrow: field(formData, "heroEyebrow"),
+        heroEyebrowEn: field(formData, "heroEyebrowEn"),
+        heroTitle1: field(formData, "heroTitle1"),
+        heroTitle1En: field(formData, "heroTitle1En"),
+        heroTitleAccent: field(formData, "heroTitleAccent"),
+        heroTitleAccentEn: field(formData, "heroTitleAccentEn"),
+        heroTitle2: field(formData, "heroTitle2"),
+        heroTitle2En: field(formData, "heroTitle2En"),
+        heroText: field(formData, "heroText"),
+        heroTextEn: field(formData, "heroTextEn"),
+      },
+    });
+    revalidateEverything();
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+interface AboutTimelineInput {
+  year: string;
+  title: string;
+  titleEn?: string;
+  text: string;
+  textEn?: string;
+}
+
+export async function updateAboutContentAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const timeline = parseJsonArray<AboutTimelineInput>(formData, "timelineJson");
+    if (timeline === null) return { error: "Μη έγκυρα δεδομένα χρονολογίου." };
+    if (timeline.some((t) => !t.year?.trim() || !t.title?.trim())) {
+      return { error: "Κάθε γεγονός του χρονολογίου πρέπει να έχει έτος και τίτλο." };
+    }
+
+    await payload.updateGlobal({
+      slug: "about-content",
+      data: {
+        hero: {
+          eyebrow: field(formData, "heroEyebrow"),
+          eyebrowEn: field(formData, "heroEyebrowEn"),
+          title1: field(formData, "heroTitle1"),
+          title1En: field(formData, "heroTitle1En"),
+          titleAccent: field(formData, "heroTitleAccent"),
+          titleAccentEn: field(formData, "heroTitleAccentEn"),
+          heroText: field(formData, "heroText"),
+          heroTextEn: field(formData, "heroTextEn"),
+        },
+        mission: {
+          missionEyebrow: field(formData, "missionEyebrow"),
+          missionEyebrowEn: field(formData, "missionEyebrowEn"),
+          missionTitle: field(formData, "missionTitle"),
+          missionTitleEn: field(formData, "missionTitleEn"),
+          mission1: field(formData, "mission1"),
+          mission1En: field(formData, "mission1En"),
+          mission2: field(formData, "mission2"),
+          mission2En: field(formData, "mission2En"),
+          mission3: field(formData, "mission3"),
+          mission3En: field(formData, "mission3En"),
+        },
+        stats: {
+          founded: field(formData, "statFounded"),
+          players: field(formData, "statPlayers"),
+          groups: field(formData, "statGroups"),
+          capacity: field(formData, "statCapacity"),
+        },
+        story: {
+          storyEyebrow: field(formData, "storyEyebrow"),
+          storyEyebrowEn: field(formData, "storyEyebrowEn"),
+          storyTitle: field(formData, "storyTitle"),
+          storyTitleEn: field(formData, "storyTitleEn"),
+          storyText: field(formData, "storyText"),
+          storyTextEn: field(formData, "storyTextEn"),
+          timeline,
+        },
+        stadium: {
+          stadiumEyebrow: field(formData, "stadiumEyebrow"),
+          stadiumEyebrowEn: field(formData, "stadiumEyebrowEn"),
+          stadiumTitle: field(formData, "stadiumTitle"),
+          stadiumTitleEn: field(formData, "stadiumTitleEn"),
+          stadiumText: field(formData, "stadiumText"),
+          stadiumTextEn: field(formData, "stadiumTextEn"),
+        },
+        fans: {
+          fansEyebrow: field(formData, "fansEyebrow"),
+          fansEyebrowEn: field(formData, "fansEyebrowEn"),
+          fansTitle: field(formData, "fansTitle"),
+          fansTitleEn: field(formData, "fansTitleEn"),
+          fansText: field(formData, "fansText"),
+          fansTextEn: field(formData, "fansTextEn"),
+          fans1: field(formData, "fans1"),
+          fans1En: field(formData, "fans1En"),
+          fans2: field(formData, "fans2"),
+          fans2En: field(formData, "fans2En"),
+        },
+        quote: {
+          text: field(formData, "quoteText"),
+          textEn: field(formData, "quoteTextEn"),
+          name: field(formData, "quoteName"),
+          nameEn: field(formData, "quoteNameEn"),
+          role: field(formData, "quoteRole"),
+          roleEn: field(formData, "quoteRoleEn"),
+        },
+      },
+    });
+    revalidateEverything();
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+function contactDepartmentData(formData: FormData, prefix: string) {
+  return {
+    title: field(formData, `${prefix}Title`),
+    titleEn: field(formData, `${prefix}TitleEn`),
+    text: field(formData, `${prefix}Text`),
+    textEn: field(formData, `${prefix}TextEn`),
+    email: field(formData, `${prefix}Email`),
+  };
+}
+
+export async function updateContactContentAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+
+    await payload.updateGlobal({
+      slug: "contact-content",
+      data: {
+        hero: {
+          eyebrow: field(formData, "heroEyebrow"),
+          eyebrowEn: field(formData, "heroEyebrowEn"),
+          title1: field(formData, "heroTitle1"),
+          title1En: field(formData, "heroTitle1En"),
+          titleAccent: field(formData, "heroTitleAccent"),
+          titleAccentEn: field(formData, "heroTitleAccentEn"),
+          text: field(formData, "heroText"),
+          textEn: field(formData, "heroTextEn"),
+        },
+        departments: {
+          general: contactDepartmentData(formData, "deptGeneral"),
+          media: contactDepartmentData(formData, "deptMedia"),
+          sponsorships: contactDepartmentData(formData, "deptSponsorships"),
+          academy: contactDepartmentData(formData, "deptAcademy"),
+        },
+        form: {
+          formEyebrow: field(formData, "formEyebrow"),
+          formEyebrowEn: field(formData, "formEyebrowEn"),
+          formTitle: field(formData, "formTitle"),
+          formTitleEn: field(formData, "formTitleEn"),
+          formText: field(formData, "formText"),
+          formTextEn: field(formData, "formTextEn"),
+        },
+        details: {
+          detailsEyebrow: field(formData, "detailsEyebrow"),
+          detailsEyebrowEn: field(formData, "detailsEyebrowEn"),
+          detailsTitle: field(formData, "detailsTitle"),
+          detailsTitleEn: field(formData, "detailsTitleEn"),
+        },
+      },
+    });
+    revalidateEverything();
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };

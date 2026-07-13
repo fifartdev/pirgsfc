@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Crest } from "@/components/ui/Crest";
 import { StatCard } from "@/components/cards/StatCard";
 import { ClubValues } from "@/components/sections/ClubValues";
-import { getCmsClubInfo } from "@/lib/cms-data";
+import { getCmsClubInfo, getCmsAboutContent } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { localeHref, buildAlternates } from "@/lib/utils";
 
@@ -20,11 +20,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { lang } = await params;
   const resolvedLang = hasLang(lang) ? lang : "el";
   const dict = getDict(resolvedLang);
+  const content = await getCmsAboutContent();
+  const description = content.heroText[resolvedLang];
   return {
     title: dict.nav.club,
-    description: dict.about.heroText,
+    description,
     alternates: buildAlternates(resolvedLang, "/about"),
-    openGraph: { title: `${dict.nav.club} | PYRGOS AFC`, description: dict.about.heroText },
+    openGraph: { title: `${dict.nav.club} | PYRGOS AFC`, description },
   };
 }
 
@@ -33,7 +35,7 @@ export default async function AboutPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const clubInfo = await getCmsClubInfo();
+  const [clubInfo, content] = await Promise.all([getCmsClubInfo(), getCmsAboutContent()]);
 
   return (
     <>
@@ -46,14 +48,14 @@ export default async function AboutPage({ params }: PageProps) {
               <Crest size="lg" />
               <div>
                 <p className="font-display text-xs font-bold uppercase tracking-[0.32em] text-crimson-bright">
-                  {dict.about.eyebrow}
+                  {content.eyebrow[lang]}
                 </p>
                 <h1 className="mt-4 font-display text-4xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-6xl">
-                  {dict.about.title1}{" "}
-                  <span className="text-gradient-crimson">{dict.about.titleAccent}</span>
+                  {content.title1[lang]}{" "}
+                  <span className="text-gradient-crimson">{content.titleAccent[lang]}</span>
                 </h1>
                 <p className="mt-6 max-w-2xl text-base leading-relaxed text-mist sm:text-lg">
-                  {dict.about.heroText}
+                  {content.heroText[lang]}
                 </p>
               </div>
             </div>
@@ -67,13 +69,13 @@ export default async function AboutPage({ params }: PageProps) {
           <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
             <AnimatedReveal>
               <SectionHeading
-                eyebrow={dict.about.missionEyebrow}
-                title={dict.about.missionTitle}
+                eyebrow={content.missionEyebrow[lang]}
+                title={content.missionTitle[lang]}
               />
               <div className="mt-6 space-y-5 text-base leading-relaxed text-mist">
-                <p>{dict.about.mission1}</p>
-                <p>{dict.about.mission2}</p>
-                <p>{dict.about.mission3}</p>
+                <p>{content.mission1[lang]}</p>
+                <p>{content.mission2[lang]}</p>
+                <p>{content.mission3[lang]}</p>
               </div>
               <div className="mt-8">
                 <Button href={localeHref(lang, "/men")} variant="crimson">
@@ -84,10 +86,10 @@ export default async function AboutPage({ params }: PageProps) {
 
             <AnimatedReveal delay={0.15}>
               <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                <StatCard value="2026" label={dict.about.statsFounded} accent="crimson" />
-                <StatCard value="39" label={dict.about.statsPlayers} accent="smoke" />
-                <StatCard value="9" label={dict.about.statsGroups} accent="smoke" />
-                <StatCard value="12.5K" label={dict.about.statsCapacity} accent="crimson" />
+                <StatCard value={content.statFounded} label={dict.about.statsFounded} accent="crimson" />
+                <StatCard value={content.statPlayers} label={dict.about.statsPlayers} accent="smoke" />
+                <StatCard value={content.statGroups} label={dict.about.statsGroups} accent="smoke" />
+                <StatCard value={content.statCapacity} label={dict.about.statsCapacity} accent="crimson" />
               </div>
             </AnimatedReveal>
           </div>
@@ -116,16 +118,16 @@ export default async function AboutPage({ params }: PageProps) {
         <Container>
           <AnimatedReveal>
             <SectionHeading
-              eyebrow={dict.about.storyEyebrow}
-              title={dict.about.storyTitle}
-              description={dict.about.storyText}
+              eyebrow={content.storyEyebrow[lang]}
+              title={content.storyTitle[lang]}
+              description={content.storyText[lang]}
               align="center"
             />
           </AnimatedReveal>
 
           <ol className="relative mx-auto mt-16 max-w-3xl space-y-10 border-l border-line pl-8 sm:pl-12">
-            {dict.about.timeline.map((item, index) => (
-              <AnimatedReveal key={item.title} delay={index * 0.1}>
+            {content.timeline.map((item, index) => (
+              <AnimatedReveal key={`${item.year}-${item.title[lang]}`} delay={index * 0.1}>
                 <li className="relative">
                   <span
                     className="absolute -left-[2.55rem] top-1 flex h-5 w-5 items-center justify-center rounded-full border border-crimson bg-night sm:-left-[3.55rem]"
@@ -135,9 +137,9 @@ export default async function AboutPage({ params }: PageProps) {
                   </span>
                   <Badge variant="crimson">{item.year}</Badge>
                   <h3 className="mt-3 font-display text-xl font-bold uppercase tracking-wide text-white">
-                    {item.title}
+                    {item.title[lang]}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-mist">{item.text}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-mist">{item.text[lang]}</p>
                 </li>
               </AnimatedReveal>
             ))}
@@ -155,9 +157,9 @@ export default async function AboutPage({ params }: PageProps) {
             <div className="relative grid gap-12 lg:grid-cols-2 lg:items-center">
               <AnimatedReveal>
                 <SectionHeading
-                  eyebrow={dict.about.stadiumEyebrow}
-                  title={dict.about.stadiumTitle}
-                  description={dict.about.stadiumText}
+                  eyebrow={content.stadiumEyebrow[lang]}
+                  title={content.stadiumTitle[lang]}
+                  description={content.stadiumText[lang]}
                 />
                 <dl className="mt-8 grid grid-cols-2 gap-6">
                   <div>
@@ -217,13 +219,13 @@ export default async function AboutPage({ params }: PageProps) {
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <AnimatedReveal>
               <SectionHeading
-                eyebrow={dict.about.fansEyebrow}
-                title={dict.about.fansTitle}
-                description={dict.about.fansText}
+                eyebrow={content.fansEyebrow[lang]}
+                title={content.fansTitle[lang]}
+                description={content.fansText[lang]}
               />
               <div className="mt-6 space-y-5 text-base leading-relaxed text-mist">
-                <p>{dict.about.fans1}</p>
-                <p>{dict.about.fans2}</p>
+                <p>{content.fans1[lang]}</p>
+                <p>{content.fans2[lang]}</p>
               </div>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Button href={localeHref(lang, "/contact")} variant="crimson">
@@ -243,12 +245,12 @@ export default async function AboutPage({ params }: PageProps) {
                 >
                   &ldquo;
                 </span>
-                <p className="text-lg leading-relaxed text-white/90">{dict.about.quote}</p>
+                <p className="text-lg leading-relaxed text-white/90">{content.quote[lang]}</p>
                 <footer className="mt-6 border-t border-line pt-5">
                   <p className="font-display text-sm font-bold uppercase tracking-wide text-crimson-bright">
-                    {dict.about.quoteName}
+                    {content.quoteName[lang]}
                   </p>
-                  <p className="text-xs text-mist">{dict.about.quoteRole}</p>
+                  <p className="text-xs text-mist">{content.quoteRole[lang]}</p>
                 </footer>
               </blockquote>
             </AnimatedReveal>

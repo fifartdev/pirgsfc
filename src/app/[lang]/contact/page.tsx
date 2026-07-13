@@ -5,7 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ContactForm } from "@/components/sections/ContactForm";
-import { getCmsClubInfo } from "@/lib/cms-data";
+import { getCmsClubInfo, getCmsContactContent } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { buildAlternates } from "@/lib/utils";
 
@@ -16,14 +16,16 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
   const resolvedLang = hasLang(lang) ? lang : "el";
-  const dict = getDict(resolvedLang);
+  const content = await getCmsContactContent();
+  const title = `${content.title1[resolvedLang]} ${content.titleAccent[resolvedLang]}`;
+  const description = content.text[resolvedLang];
   return {
-    title: `${dict.contact.title1} ${dict.contact.titleAccent}`,
-    description: dict.contact.text,
+    title,
+    description,
     alternates: buildAlternates(resolvedLang, "/contact"),
     openGraph: {
-      title: `${dict.contact.title1} ${dict.contact.titleAccent} | PYRGOS AFC`,
-      description: dict.contact.text,
+      title: `${title} | PYRGOS AFC`,
+      description,
     },
   };
 }
@@ -33,20 +35,22 @@ export default async function ContactPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const clubInfo = await getCmsClubInfo();
+  const [clubInfo, content] = await Promise.all([getCmsClubInfo(), getCmsContactContent()]);
 
   const departments = [
-    { icon: Mail, ...dict.contact.departments.general, contact: "hello@pyrgosafc.com" },
-    { icon: Megaphone, ...dict.contact.departments.media, contact: "media@pyrgosafc.com" },
+    { icon: Mail, title: content.departments.general.title[lang], text: content.departments.general.text[lang], contact: content.departments.general.email },
+    { icon: Megaphone, title: content.departments.media.title[lang], text: content.departments.media.text[lang], contact: content.departments.media.email },
     {
       icon: Handshake,
-      ...dict.contact.departments.sponsorships,
-      contact: "partners@pyrgosafc.com",
+      title: content.departments.sponsorships.title[lang],
+      text: content.departments.sponsorships.text[lang],
+      contact: content.departments.sponsorships.email,
     },
     {
       icon: GraduationCap,
-      ...dict.contact.departments.academy,
-      contact: "academy@pyrgosafc.com",
+      title: content.departments.academy.title[lang],
+      text: content.departments.academy.text[lang],
+      contact: content.departments.academy.email,
     },
   ];
 
@@ -57,14 +61,14 @@ export default async function ContactPage({ params }: PageProps) {
         <Container className="relative">
           <AnimatedReveal>
             <p className="font-display text-xs font-bold uppercase tracking-[0.32em] text-crimson-bright">
-              {dict.contact.eyebrow}
+              {content.eyebrow[lang]}
             </p>
             <h1 className="mt-4 font-display text-4xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-6xl">
-              {dict.contact.title1}{" "}
-              <span className="text-gradient-crimson">{dict.contact.titleAccent}</span>
+              {content.title1[lang]}{" "}
+              <span className="text-gradient-crimson">{content.titleAccent[lang]}</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-mist sm:text-lg">
-              {dict.contact.text}
+              {content.text[lang]}
             </p>
           </AnimatedReveal>
         </Container>
@@ -103,9 +107,9 @@ export default async function ContactPage({ params }: PageProps) {
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr]">
             <AnimatedReveal>
               <SectionHeading
-                eyebrow={dict.contact.formEyebrow}
-                title={dict.contact.formTitle}
-                description={dict.contact.formText}
+                eyebrow={content.formEyebrow[lang]}
+                title={content.formTitle[lang]}
+                description={content.formText[lang]}
               />
               <div className="mt-10">
                 <ContactForm strings={dict.contact.form} />
@@ -114,8 +118,8 @@ export default async function ContactPage({ params }: PageProps) {
 
             <AnimatedReveal delay={0.15}>
               <SectionHeading
-                eyebrow={dict.contact.detailsEyebrow}
-                title={dict.contact.detailsTitle}
+                eyebrow={content.detailsEyebrow[lang]}
+                title={content.detailsTitle[lang]}
               />
               <ul className="mt-10 space-y-6">
                 <li className="flex items-start gap-4">

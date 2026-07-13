@@ -16,6 +16,12 @@ import {
   ListOrdered,
   LogOut,
   ChevronRight,
+  Building2,
+  Search,
+  Settings,
+  Home,
+  FileText,
+  Mail,
 } from "lucide-react";
 
 const NAV = [
@@ -30,14 +36,25 @@ const NAV = [
   { href: "/club-admin/standings", label: "Βαθμολογία", icon: ListOrdered },
   { href: "/club-admin/news", label: "Νέα", icon: Newspaper },
   { href: "/club-admin/staff", label: "Προσωπικό", icon: UserCog },
-];
+  { href: "/club-admin/content/home", label: "Περιεχόμενο Αρχικής", icon: Home },
+  { href: "/club-admin/content/about", label: "Περιεχόμενο — Σχετικά", icon: FileText },
+  { href: "/club-admin/content/contact", label: "Περιεχόμενο — Επικοινωνία", icon: Mail },
+  { href: "/club-admin/settings/club-info", label: "Πληροφορίες Συλλόγου", icon: Building2 },
+  { href: "/club-admin/settings/seo", label: "Προεπιλογές SEO", icon: Search },
+] as const;
+
+const SUPERADMIN_ONLY_NAV = [
+  { href: "/club-admin/settings/site", label: "Ρυθμίσεις Ιστότοπου", icon: Settings },
+] as const;
 
 interface SidebarProps {
   userName?: string;
+  role?: "superadmin" | "club_admin";
 }
 
-export function Sidebar({ userName }: SidebarProps) {
+export function Sidebar({ userName, role }: SidebarProps) {
   const pathname = usePathname();
+  const items = role === "superadmin" ? [...NAV, ...SUPERADMIN_ONLY_NAV] : NAV;
 
   return (
     <aside className="flex h-screen w-64 flex-shrink-0 flex-col border-r border-white/10 bg-[#0d0d0d]">
@@ -55,7 +72,7 @@ export function Sidebar({ userName }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-0.5">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {items.map(({ href, label, icon: Icon }) => {
             const active =
               pathname === href || (href !== "/club-admin/dashboard" && pathname.startsWith(href));
             return (

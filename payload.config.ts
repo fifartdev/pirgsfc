@@ -16,7 +16,7 @@ import { Players } from "./src/collections/Players";
 import { Rosters } from "./src/collections/Rosters";
 import { Venues } from "./src/collections/Venues";
 import { Matches } from "./src/collections/Matches";
-import { Standings } from "./src/collections/Standings";
+import { LeagueTables } from "./src/collections/LeagueTables";
 import { NewsCategories } from "./src/collections/NewsCategories";
 import { News } from "./src/collections/News";
 import { Staff } from "./src/collections/Staff";
@@ -26,6 +26,9 @@ import { StaffAssignments } from "./src/collections/StaffAssignments";
 import { SiteSettings } from "./src/globals/SiteSettings";
 import { ClubInfo } from "./src/globals/ClubInfo";
 import { SeoDefaults } from "./src/globals/SeoDefaults";
+import { HomeContent } from "./src/globals/HomeContent";
+import { AboutContent } from "./src/globals/AboutContent";
+import { ContactContent } from "./src/globals/ContactContent";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -70,14 +73,14 @@ export default buildConfig({
     Rosters,
     Venues,
     Matches,
-    Standings,
+    LeagueTables,
     NewsCategories,
     News,
     Staff,
     StaffAssignments,
   ],
 
-  globals: [SiteSettings, ClubInfo, SeoDefaults],
+  globals: [SiteSettings, ClubInfo, SeoDefaults, HomeContent, AboutContent, ContactContent],
 
   db: postgresAdapter({
     pool: {
