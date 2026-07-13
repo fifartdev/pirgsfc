@@ -221,7 +221,7 @@ A roster entry links one player to one team for one season. This is how the webs
 3. Optionally set:
    - **Νούμερο φανέλας** — shirt number for this season (overrides the player's default)
    - **Ημ. εγγραφής** — date the player joined this roster
-   - **Αρχηγός / Αντιαρχηγός** — captain / vice-captain checkboxes
+   - **Αρχηγός / Β' Αρχηγός** — captain / vice-captain checkboxes
    - **Κατάσταση** — `Ενεργός` · `Δανεισμός` · `Μεταγραφή` · `Τραυματίας` · `Ανενεργός`
    - **Στατιστικά σεζόν** — appearances, goals, assists, yellow cards, red cards, minutes played, and clean sheets (goalkeepers only) *for this player, on this team, this season*. Shown on the player's public profile page. Leave clean sheets empty for outfield players.
 4. Click **"Αποθήκευση"**.

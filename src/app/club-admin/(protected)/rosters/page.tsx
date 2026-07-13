@@ -2,17 +2,36 @@ import type { Metadata } from "next";
 import { requireClubAdmin } from "@/lib/club-admin/auth";
 import { AdminTable } from "@/components/club-admin/AdminTable";
 import { StatusBadge } from "@/components/club-admin/StatusBadge";
+import { RosterFilters } from "@/components/club-admin/RosterFilters";
 
 export const metadata: Metadata = { title: "Ρόστερ" };
 
-export default async function RostersPage() {
+interface PageProps {
+  searchParams: Promise<{ team?: string; season?: string }>;
+}
+
+export default async function RostersPage({ searchParams }: PageProps) {
   const { payload } = await requireClubAdmin();
-  const res = await payload.find({
-    collection: "rosters",
-    depth: 2,
-    sort: "-createdAt",
-    limit: 200,
-  });
+  const { team, season } = await searchParams;
+
+  // "A roster" isn't its own document — it's the implicit set of rows for a
+  // given team+season pair, so filtering "to a single roster" means filtering
+  // this join table by those two relationship fields.
+  const where: Record<string, { equals: number }> = {};
+  if (team) where.team = { equals: Number(team) };
+  if (season) where.season = { equals: Number(season) };
+
+  const [res, teamsRes, seasonsRes] = await Promise.all([
+    payload.find({
+      collection: "rosters",
+      depth: 2,
+      sort: "-createdAt",
+      limit: 200,
+      where: Object.keys(where).length > 0 ? where : undefined,
+    }),
+    payload.find({ collection: "teams", sort: "name", limit: 100 }),
+    payload.find({ collection: "seasons", sort: "-startYear", limit: 50 }),
+  ]);
 
   type RosterDoc = {
     id: string;
@@ -25,12 +44,22 @@ export default async function RostersPage() {
 
   const rows = res.docs as RosterDoc[];
 
+  const teamOptions = (teamsRes.docs as { id: string | number; name: string }[]).map((t) => ({
+    value: String(t.id),
+    label: t.name,
+  }));
+  const seasonOptions = (seasonsRes.docs as { id: string | number; title: string }[]).map((s) => ({
+    value: String(s.id),
+    label: s.title,
+  }));
+
   return (
     <AdminTable
       title="Ρόστερ"
       rows={rows}
       newHref="/club-admin/rosters/new"
       editHref={(r) => `/club-admin/rosters/${r.id}`}
+      filters={<RosterFilters teamOptions={teamOptions} seasonOptions={seasonOptions} />}
       columns={[
         {
           key: "player",
@@ -54,7 +83,11 @@ export default async function RostersPage() {
         },
         { key: "status", label: "Κατάσταση", render: (r) => <StatusBadge value={r.status} /> },
       ]}
-      emptyMessage="Δεν βρέθηκαν εγγραφές ρόστερ."
+      emptyMessage={
+        team || season
+          ? "Δεν βρέθηκαν εγγραφές για αυτό το φίλτρο."
+          : "Δεν βρέθηκαν εγγραφές ρόστερ."
+      }
     />
   );
 }

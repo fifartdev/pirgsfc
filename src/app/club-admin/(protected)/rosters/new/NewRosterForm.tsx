@@ -33,7 +33,7 @@ export function NewRosterForm({ seasonOptions, teamOptions, playerOptions }: Pro
         </div>
         <div className="flex gap-4">
           <FormField label="Αρχηγός" name="isCaptain" type="checkbox" />
-          <FormField label="Αντιαρχηγός" name="isViceCaptain" type="checkbox" />
+          <FormField label="Β' Αρχηγός" name="isViceCaptain" type="checkbox" />
         </div>
         <FormField label="Κατάσταση" name="status" type="select" defaultValue="active" options={[
           { value: "active", label: "Ενεργός" },

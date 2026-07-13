@@ -73,7 +73,7 @@ export function EditRosterForm({ roster, seasonOptions, teamOptions, playerOptio
         </div>
         <div className="flex gap-4">
           <FormField label="Αρχηγός" name="isCaptain" type="checkbox" defaultValue={roster.isCaptain} />
-          <FormField label="Αντιαρχηγός" name="isViceCaptain" type="checkbox" defaultValue={roster.isViceCaptain} />
+          <FormField label="Β' Αρχηγός" name="isViceCaptain" type="checkbox" defaultValue={roster.isViceCaptain} />
         </div>
         <FormField
           label="Κατάσταση"

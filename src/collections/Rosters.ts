@@ -78,7 +78,7 @@ export const Rosters: CollectionConfig = {
         },
         {
           name: "isViceCaptain",
-          label: "Αντιαρχηγός",
+          label: "Β' Αρχηγός",
           type: "checkbox",
           defaultValue: false,
         },

@@ -14,6 +14,8 @@ interface AdminTableProps<T extends { id: string | number }> {
   newHref: string;
   editHref: (row: T) => string;
   emptyMessage?: string;
+  /** Optional filter controls rendered between the header and the table. */
+  filters?: React.ReactNode;
 }
 
 export function AdminTable<T extends { id: string | number }>({
@@ -23,6 +25,7 @@ export function AdminTable<T extends { id: string | number }>({
   newHref,
   editHref,
   emptyMessage = "Δεν βρέθηκαν εγγραφές.",
+  filters,
 }: AdminTableProps<T>) {
   return (
     <div>
@@ -37,6 +40,8 @@ export function AdminTable<T extends { id: string | number }>({
           Δημιουργία
         </Link>
       </div>
+
+      {filters && <div className="mb-4">{filters}</div>}
 
       {/* Table */}
       {rows.length === 0 ? (
