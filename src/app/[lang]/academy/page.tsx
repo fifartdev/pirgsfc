@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { academyGroups } from "@/data/academy";
 import { getDict, hasLang } from "@/i18n";
-import { localeHref } from "@/lib/utils";
+import { localeHref, buildAlternates } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -16,10 +16,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = getDict(hasLang(lang) ? lang : "el");
+  const resolvedLang = hasLang(lang) ? lang : "el";
+  const dict = getDict(resolvedLang);
   return {
     title: dict.academy.title,
     description: dict.academy.heroText,
+    alternates: buildAlternates(resolvedLang, "/academy"),
     openGraph: {
       title: `${dict.academy.title} | PYRGOS AFC`,
       description: dict.academy.heroText,

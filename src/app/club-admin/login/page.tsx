@@ -13,6 +13,17 @@ const ERROR_MAP: Record<string, string> = {
   permission: "Δεν έχετε δικαίωμα πρόσβασης στο admin panel.",
 };
 
+// Only ever redirect to a same-origin, relative club-admin path. A bare
+// "/from" query param would otherwise let an attacker send
+// "?from=https://evil.example" (or "//evil.example") and get a logged-in
+// admin bounced off-site right after authenticating.
+function safeRedirectTarget(from: string | null): string {
+  if (from && /^\/club-admin(\/|$)/.test(from) && !from.startsWith("//")) {
+    return from;
+  }
+  return "/club-admin/dashboard";
+}
+
 function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,7 +34,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (state?.success) {
-      router.push(fromParam ?? "/club-admin/dashboard");
+      router.push(safeRedirectTarget(fromParam));
     }
   }, [state, router, fromParam]);
 

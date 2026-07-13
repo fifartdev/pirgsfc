@@ -54,9 +54,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           select: { slug: true, updatedAt: true },
         }),
         payload.find({
-          collection: "teams",
+          collection: "players",
           where: { status: { equals: "active" } },
-          limit: 50,
+          limit: 500,
           select: { slug: true, updatedAt: true },
         }),
       ]);

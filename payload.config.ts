@@ -4,6 +4,7 @@ import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
+import sharp from "sharp";
 
 // Collections
 import { Users } from "./src/collections/Users";
@@ -83,6 +84,12 @@ export default buildConfig({
   }),
 
   editor: lexicalEditor({}),
+
+  // Required for Media's imageSizes/adminThumbnail (src/collections/Media.ts) to
+  // actually generate resized variants — without this, Payload silently skips
+  // resizing even though sharp is installed (it must be passed explicitly, not
+  // just present in node_modules).
+  sharp,
 
   secret: process.env.PAYLOAD_SECRET ?? "",
 

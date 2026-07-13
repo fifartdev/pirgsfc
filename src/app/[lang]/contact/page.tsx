@@ -5,8 +5,9 @@ import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ContactForm } from "@/components/sections/ContactForm";
-import { CLUB, SOCIAL_LINKS } from "@/lib/constants";
+import { getCmsClubInfo } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
+import { buildAlternates } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -14,10 +15,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = getDict(hasLang(lang) ? lang : "el");
+  const resolvedLang = hasLang(lang) ? lang : "el";
+  const dict = getDict(resolvedLang);
   return {
     title: `${dict.contact.title1} ${dict.contact.titleAccent}`,
     description: dict.contact.text,
+    alternates: buildAlternates(resolvedLang, "/contact"),
     openGraph: {
       title: `${dict.contact.title1} ${dict.contact.titleAccent} | PYRGOS AFC`,
       description: dict.contact.text,
@@ -30,6 +33,7 @@ export default async function ContactPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
+  const clubInfo = await getCmsClubInfo();
 
   const departments = [
     { icon: Mail, ...dict.contact.departments.general, contact: "hello@pyrgosafc.com" },
@@ -120,9 +124,9 @@ export default async function ContactPage({ params }: PageProps) {
                   </span>
                   <div>
                     <p className="font-display text-sm font-bold uppercase tracking-wide text-white">
-                      {CLUB.stadium.name[lang]}
+                      {clubInfo.stadiumName[lang]}
                     </p>
-                    <p className="mt-1 text-sm text-mist">{CLUB.contact.address[lang]}</p>
+                    <p className="mt-1 text-sm text-mist">{clubInfo.contactAddress[lang]}</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-4">
@@ -134,10 +138,10 @@ export default async function ContactPage({ params }: PageProps) {
                       {dict.contact.emailLabel}
                     </p>
                     <a
-                      href={`mailto:${CLUB.contact.email}`}
+                      href={`mailto:${clubInfo.contactEmail}`}
                       className="mt-1 block text-sm text-mist transition-colors hover:text-crimson-bright"
                     >
-                      {CLUB.contact.email}
+                      {clubInfo.contactEmail}
                     </a>
                   </div>
                 </li>
@@ -150,10 +154,10 @@ export default async function ContactPage({ params }: PageProps) {
                       {dict.contact.phoneLabel}
                     </p>
                     <a
-                      href={`tel:${CLUB.contact.phone.replace(/\s/g, "")}`}
+                      href={`tel:${clubInfo.contactPhone.replace(/\s/g, "")}`}
                       className="mt-1 block text-sm text-mist transition-colors hover:text-crimson-bright"
                     >
-                      {CLUB.contact.phone}
+                      {clubInfo.contactPhone}
                     </a>
                   </div>
                 </li>
@@ -172,14 +176,14 @@ export default async function ContactPage({ params }: PageProps) {
                 <div className="relative text-center">
                   <MapPin className="mx-auto h-10 w-10 text-crimson-bright" aria-hidden="true" />
                   <p className="mt-3 font-display text-sm font-bold uppercase tracking-widest text-white">
-                    {CLUB.stadium.name[lang]}
+                    {clubInfo.stadiumName[lang]}
                   </p>
                   <p className="mt-1 text-xs text-mist">{dict.contact.mapSoon}</p>
                 </div>
               </div>
 
               <ul className="mt-8 flex flex-wrap gap-3">
-                {SOCIAL_LINKS.map((social) => (
+                {clubInfo.socialLinks.map((social) => (
                   <li key={social.label}>
                     <a
                       href={social.href}

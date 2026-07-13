@@ -397,4 +397,12 @@ export const en: Dictionary = {
     text: "The page you are looking for doesn't exist or has been moved. Let's get you back onto the pitch.",
     backHome: "Back to Home",
   },
+  cookieBanner: {
+    message: "We use cookies to improve your experience on our website.",
+    accept: "Accept",
+  },
+  maintenance: {
+    title: "The Site Is Under Maintenance",
+    text: "We'll be back shortly. Thank you for your patience.",
+  },
 };

@@ -6,7 +6,16 @@ const adminPanelAccess = ({ req }: { req: PayloadRequest }): boolean =>
 
 export const Users: CollectionConfig = {
   slug: "users",
-  auth: true,
+  // Matches the secure/sameSite flags the hand-rolled club-admin login already
+  // sets on this same "payload-token" cookie (src/lib/club-admin/actions.ts) —
+  // without this override Payload's own /admin login falls back to `secure:
+  // false`, so the superadmin session cookie wouldn't be marked HTTPS-only.
+  auth: {
+    cookies: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+    },
+  },
   admin: {
     useAsTitle: "email",
     defaultColumns: ["email", "firstName", "lastName", "role"],

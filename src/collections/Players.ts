@@ -156,6 +156,15 @@ export const Players: CollectionConfig = {
       ],
     },
     {
+      name: "featured",
+      label: "Προβεβλημένος παίκτης",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        description: 'Εμφανίζεται στην ενότητα "Ξεχωριστοί Παίκτες" της αρχικής σελίδας.',
+      },
+    },
+    {
       name: "status",
       label: "Κατάσταση",
       type: "select",

@@ -20,6 +20,17 @@ export default async function EditRosterPage({ params }: { params: Promise<{ id:
     const player = doc.player as { id?: string | number; fullName?: string; firstName?: string; lastName?: string } | null;
     const season = doc.season as { id?: string | number } | number | string | null;
     const team = doc.team as { id?: string | number } | number | string | null;
+    const stats = doc.stats as
+      | {
+          appearances?: number;
+          goals?: number;
+          assists?: number;
+          yellowCards?: number;
+          redCards?: number;
+          minutesPlayed?: number;
+          cleanSheets?: number;
+        }
+      | undefined;
 
     roster = {
       id: String(doc.id),
@@ -32,6 +43,13 @@ export default async function EditRosterPage({ params }: { params: Promise<{ id:
       isCaptain: Boolean(doc.isCaptain),
       isViceCaptain: Boolean(doc.isViceCaptain),
       joinedDate: doc.joinedDate ? (doc.joinedDate as string).slice(0, 10) : undefined,
+      statsAppearances: stats?.appearances,
+      statsGoals: stats?.goals,
+      statsAssists: stats?.assists,
+      statsYellowCards: stats?.yellowCards,
+      statsRedCards: stats?.redCards,
+      statsMinutesPlayed: stats?.minutesPlayed,
+      statsCleanSheets: stats?.cleanSheets,
     };
   } catch {
     notFound();

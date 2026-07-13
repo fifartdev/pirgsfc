@@ -3,21 +3,27 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { getDict } from "@/i18n";
+import { getCmsClubInfo } from "@/lib/cms-data";
 import type { Lang } from "@/types";
 
 interface ClubValuesProps {
   lang: Lang;
 }
 
-export function ClubValues({ lang }: ClubValuesProps) {
-  const dict = getDict(lang);
+// Values are a variable-length CMS array with no icon field of their own —
+// cycle through this fixed set so a 5th admin-added value still gets an icon
+// instead of breaking.
+const VALUE_ICONS = [Flame, Shield, Users, Rocket];
 
-  const values = [
-    { icon: Flame, ...dict.values.passion },
-    { icon: Shield, ...dict.values.discipline },
-    { icon: Users, ...dict.values.community },
-    { icon: Rocket, ...dict.values.ambition },
-  ];
+export async function ClubValues({ lang }: ClubValuesProps) {
+  const dict = getDict(lang);
+  const clubInfo = await getCmsClubInfo();
+
+  const values = clubInfo.values.map((value, index) => ({
+    icon: VALUE_ICONS[index % VALUE_ICONS.length],
+    title: value.title[lang],
+    text: value.description[lang],
+  }));
 
   return (
     <section

@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/Badge";
 import { MatchesTabs } from "@/components/sections/MatchesTabs";
 import { getCmsUpcomingMatches, getCmsCompletedMatches, getCmsNextMatch } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
-import { formatDateLong } from "@/lib/utils";
+import { formatDateLong, buildAlternates } from "@/lib/utils";
+import { matchJsonLd } from "@/lib/seo";
+import type { Match, Lang } from "@/types";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -15,10 +17,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = getDict(hasLang(lang) ? lang : "el");
+  const resolvedLang = hasLang(lang) ? lang : "el";
+  const dict = getDict(resolvedLang);
   return {
     title: `${dict.matches.title1} ${dict.matches.titleAccent}`,
     description: dict.matches.text,
+    alternates: buildAlternates(resolvedLang, "/matches"),
     openGraph: {
       title: `${dict.matches.title1} ${dict.matches.titleAccent} | PYRGOS AFC`,
       description: dict.matches.text,
@@ -37,8 +41,26 @@ export default async function MatchesPage({ params }: PageProps) {
     getCmsNextMatch(),
   ]);
 
+  const matchLd = (match: Match, matchLang: Lang) =>
+    matchJsonLd({
+      homeTeam: match.homeTeam[matchLang],
+      awayTeam: match.awayTeam[matchLang],
+      date: match.date,
+      venue: match.venue[matchLang] || undefined,
+      homeScore: match.homeScore,
+      awayScore: match.awayScore,
+      status: match.status,
+    });
+
   return (
     <>
+      {[...upcoming, ...completed].map((match) => (
+        <script
+          key={match.id}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(matchLd(match, lang)) }}
+        />
+      ))}
       <section className="noise relative overflow-hidden bg-night pb-16 pt-40 sm:pb-24">
         <div className="stadium-lights" aria-hidden="true" />
         <Container className="relative">

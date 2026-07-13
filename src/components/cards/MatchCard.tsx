@@ -56,7 +56,9 @@ export function MatchCard({ match, lang, highlight = false }: MatchCardProps) {
       <div className="relative">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Badge variant="crimson">{dict.competitions[match.competition]}</Badge>
+            <Badge variant="crimson">
+              {match.leagueName?.[lang] || dict.competitions[match.competition]}
+            </Badge>
             <Badge variant="neutral">{dict.departments[match.department]}</Badge>
           </div>
           <div className="flex items-center gap-2">

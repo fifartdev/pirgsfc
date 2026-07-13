@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Hero } from "@/components/sections/Hero";
 import { NextMatch } from "@/components/sections/NextMatch";
@@ -9,12 +10,17 @@ import { ClubValues } from "@/components/sections/ClubValues";
 import { LatestNews } from "@/components/sections/LatestNews";
 import { SponsorsStrip } from "@/components/sections/SponsorsStrip";
 import { FanCTA } from "@/components/sections/FanCTA";
-import { getNextMatch, getRecentResults } from "@/data/matches";
-import { getCmsLatestArticles, getCmsFeaturedPlayers } from "@/lib/cms-data";
+import { getCmsLatestArticles, getCmsFeaturedPlayers, getCmsNextMatch, getCmsRecentResults } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
+import { buildAlternates } from "@/lib/utils";
 
 interface HomePageProps {
   params: Promise<{ lang: string }>;
+}
+
+export async function generateMetadata({ params }: HomePageProps): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: buildAlternates(hasLang(lang) ? lang : "el", "/") };
 }
 
 export default async function HomePage({ params }: HomePageProps) {
@@ -22,9 +28,9 @@ export default async function HomePage({ params }: HomePageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const nextMatch = getNextMatch("men");
-  const recentResults = getRecentResults(3);
-  const [featuredPlayers, latestArticles] = await Promise.all([
+  const [nextMatch, recentResults, featuredPlayers, latestArticles] = await Promise.all([
+    getCmsNextMatch("men"),
+    getCmsRecentResults(3),
     getCmsFeaturedPlayers(),
     getCmsLatestArticles(3),
   ]);

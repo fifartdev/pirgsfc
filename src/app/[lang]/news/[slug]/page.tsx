@@ -11,7 +11,9 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { newsArticles } from "@/data/news";
 import { getCmsNewsArticle, getCmsRelatedArticles } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
-import { formatDateLong, localeHref } from "@/lib/utils";
+import { formatDateLong, localeHref, buildAlternates } from "@/lib/utils";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo";
+import { SITE_URL } from "@/lib/constants";
 
 interface ArticlePageProps {
   params: Promise<{ lang: string; slug: string }>;
@@ -29,12 +31,16 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   return {
     title: article.title[lang],
     description: article.excerpt[lang],
+    alternates: buildAlternates(lang, `/news/${slug}`),
     openGraph: {
       title: `${article.title[lang]} | PYRGOS AFC`,
       description: article.excerpt[lang],
       type: "article",
       publishedTime: article.date,
       authors: [article.author[lang]],
+      images: article.imageUrl
+        ? [{ url: article.imageUrl, alt: article.imageAlt || article.title[lang] }]
+        : undefined,
     },
   };
 }
@@ -53,8 +59,30 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
+  const articleLd = articleJsonLd({
+    title: article.title[lang],
+    excerpt: article.excerpt[lang],
+    slug: article.slug,
+    author: article.author[lang],
+    publishedDate: article.date,
+    lang,
+  });
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: dict.nav.home, url: `${SITE_URL}${localeHref(lang, "/")}` },
+    { name: dict.nav.news, url: `${SITE_URL}${localeHref(lang, "/news")}` },
+    { name: article.title[lang], url: `${SITE_URL}${localeHref(lang, `/news/${article.slug}`)}` },
+  ]);
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       {/* Article hero */}
       <section className="noise relative overflow-hidden bg-night pb-16 pt-40 sm:pb-20">
         <div className="stadium-lights" aria-hidden="true" />

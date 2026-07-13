@@ -1,15 +1,16 @@
 import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
-import { sponsors } from "@/data/sponsors";
 import { getDict } from "@/i18n";
+import { getCmsClubInfo } from "@/lib/cms-data";
 import type { Lang } from "@/types";
 
 interface SponsorsStripProps {
   lang: Lang;
 }
 
-export function SponsorsStrip({ lang }: SponsorsStripProps) {
+export async function SponsorsStrip({ lang }: SponsorsStripProps) {
   const dict = getDict(lang);
+  const { sponsors } = await getCmsClubInfo();
 
   return (
     <section

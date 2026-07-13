@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { getCmsNewsArticles, getCmsFeaturedArticle } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
-import { formatDate, localeHref } from "@/lib/utils";
+import { formatDate, localeHref, buildAlternates } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -16,10 +16,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = getDict(hasLang(lang) ? lang : "el");
+  const resolvedLang = hasLang(lang) ? lang : "el";
+  const dict = getDict(resolvedLang);
   return {
     title: `${dict.news.title1} ${dict.news.titleAccent}`,
     description: dict.news.text,
+    alternates: buildAlternates(resolvedLang, "/news"),
     openGraph: {
       title: `${dict.news.title1} ${dict.news.titleAccent} | PYRGOS AFC`,
       description: dict.news.text,

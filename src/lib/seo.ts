@@ -1,48 +1,88 @@
+import { cache } from "react";
 import { CLUB, SITE_URL } from "@/lib/constants";
+import { getPayloadClient } from "@/lib/payload";
+import { getCmsClubInfo } from "@/lib/cms-data";
+
+interface SeoDefaultsDoc {
+  defaultOgImage?: { url?: string } | number | null;
+  twitterHandle?: string;
+  robots?: { index?: boolean; follow?: boolean; additionalDirectives?: string };
+  structuredData?: {
+    organizationName?: string;
+    foundingYear?: number;
+    sport?: string;
+    location?: string;
+  };
+}
+
+/**
+ * Reads the editable `seo-defaults` global. Only non-URL editorial fields are
+ * pulled from here (organization name/founding year/sport, Twitter handle,
+ * robots directives, OG image) — `structuredData.organizationUrl` and
+ * `SiteSettings.siteUrl` are deliberately NOT used anywhere as a URL source.
+ * Both fields carry the same hardcoded `https://pyrgosafc.example.com`
+ * placeholder as their Payload `defaultValue`, which Payload returns as the
+ * field's value for any global that's never been explicitly edited — using
+ * either would silently reintroduce the wrong-domain bug that `SITE_URL` was
+ * fixed for (see src/lib/constants.ts). `SITE_URL` stays the single source of
+ * truth for every URL/@id field.
+ */
+export const getSeoDefaults = cache(async (): Promise<SeoDefaultsDoc | null> => {
+  try {
+    const payload = await getPayloadClient();
+    if (!payload) return null;
+    return (await payload.findGlobal({ slug: "seo-defaults", depth: 1 })) as SeoDefaultsDoc;
+  } catch {
+    return null;
+  }
+});
+
+export function ogImageUrl(field: SeoDefaultsDoc["defaultOgImage"]): string | undefined {
+  return field && typeof field === "object" && typeof field.url === "string" ? field.url : undefined;
+}
 
 /** JSON-LD for the Organisation / SportsTeam at club level */
-export function organizationJsonLd() {
+export async function organizationJsonLd() {
+  const [defaults, clubInfo] = await Promise.all([getSeoDefaults(), getCmsClubInfo()]);
+  const sd = defaults?.structuredData;
   return {
     "@context": "https://schema.org",
     "@type": "SportsOrganization",
     "@id": `${SITE_URL}/#organization`,
-    name: CLUB.name,
-    alternateName: CLUB.shortName,
+    name: sd?.organizationName || clubInfo.name.el || CLUB.name,
+    alternateName: clubInfo.shortName || CLUB.shortName,
     url: SITE_URL,
     logo: `${SITE_URL}/icon.svg`,
-    foundingDate: String(CLUB.founded),
-    sport: "Football",
+    foundingDate: String(sd?.foundingYear || clubInfo.founded || CLUB.founded),
+    sport: sd?.sport || "Football",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Λεωφόρος Πύργου 1",
+      streetAddress: clubInfo.contactAddress.el,
       addressLocality: "Πύργος",
       addressCountry: "GR",
     },
     contactPoint: {
       "@type": "ContactPoint",
-      email: CLUB.contact.email,
-      telephone: CLUB.contact.phone,
+      email: clubInfo.contactEmail,
+      telephone: clubInfo.contactPhone,
       contactType: "customer service",
     },
-    sameAs: [
-      "https://instagram.com/pyrgosafc",
-      "https://x.com/pyrgosafc",
-      "https://facebook.com/pyrgosafc",
-    ],
+    sameAs: clubInfo.socialLinks.map((s) => s.href),
   };
 }
 
 /** JSON-LD for the home stadium */
-export function stadiumJsonLd() {
+export async function stadiumJsonLd() {
+  const clubInfo = await getCmsClubInfo();
   return {
     "@context": "https://schema.org",
     "@type": "StadiumOrArena",
     "@id": `${SITE_URL}/#stadium`,
-    name: CLUB.stadium.name.el,
-    alternateName: CLUB.stadium.name.en,
+    name: clubInfo.stadiumName.el,
+    alternateName: clubInfo.stadiumName.en,
     sport: "Football",
-    maximumAttendeeCapacity: parseInt(CLUB.stadium.capacity.replace(/[^0-9]/g, "")),
-    openingDate: String(CLUB.stadium.opened),
+    maximumAttendeeCapacity: parseInt(clubInfo.stadiumCapacity.replace(/[^0-9]/g, "")) || undefined,
+    openingDate: String(clubInfo.stadiumOpened),
     address: {
       "@type": "PostalAddress",
       addressLocality: "Πύργος",
@@ -102,12 +142,13 @@ export function matchJsonLd(params: {
       { "@type": "SportsTeam", name: params.homeTeam },
       { "@type": "SportsTeam", name: params.awayTeam },
     ],
-    eventStatus:
-      params.status === "upcoming"
-        ? "https://schema.org/EventScheduled"
-        : params.status === "live"
-        ? "https://schema.org/EventMovedOnline"
-        : "https://schema.org/EventPostponed",
+    // schema.org's eventStatus vocabulary has no "completed"/"in-progress"
+    // value distinct from a normal scheduled event that already occurred —
+    // EventScheduled is correct for upcoming, live, and completed alike here.
+    // (This app's postponed/cancelled matches are already collapsed into
+    // "upcoming" upstream in cms-data.ts's STATUS_MAP, so there's nothing to
+    // map to EventPostponed/EventCancelled at this layer.)
+    eventStatus: "https://schema.org/EventScheduled",
     ...(params.homeScore != null && params.awayScore != null
       ? {
           result: {

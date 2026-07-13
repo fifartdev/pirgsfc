@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Crest } from "@/components/ui/Crest";
 import { Container } from "@/components/ui/Container";
-import { CLUB, NAV_ITEMS, FOOTER_EXTRA_PATHS, SOCIAL_LINKS } from "@/lib/constants";
-import { sponsors } from "@/data/sponsors";
+import { NAV_ITEMS, FOOTER_EXTRA_PATHS } from "@/lib/constants";
+import { getCmsClubInfo } from "@/lib/cms-data";
 import { getDict } from "@/i18n";
 import { localeHref } from "@/lib/utils";
 import type { Lang } from "@/types";
@@ -11,8 +11,9 @@ interface FooterProps {
   lang: Lang;
 }
 
-export function Footer({ lang }: FooterProps) {
+export async function Footer({ lang }: FooterProps) {
   const dict = getDict(lang);
+  const clubInfo = await getCmsClubInfo();
 
   const links = [
     ...NAV_ITEMS.map((item) => ({
@@ -68,26 +69,26 @@ export function Footer({ lang }: FooterProps) {
               {dict.footer.contact}
             </h2>
             <ul className="mt-5 space-y-3 text-sm text-white/75">
-              <li>{CLUB.contact.address[lang]}</li>
+              <li>{clubInfo.contactAddress[lang]}</li>
               <li>
                 <a
-                  href={`mailto:${CLUB.contact.email}`}
+                  href={`mailto:${clubInfo.contactEmail}`}
                   className="transition-colors hover:text-crimson-bright"
                 >
-                  {CLUB.contact.email}
+                  {clubInfo.contactEmail}
                 </a>
               </li>
               <li>
                 <a
-                  href={`tel:${CLUB.contact.phone.replace(/\s/g, "")}`}
+                  href={`tel:${clubInfo.contactPhone.replace(/\s/g, "")}`}
                   className="transition-colors hover:text-crimson-bright"
                 >
-                  {CLUB.contact.phone}
+                  {clubInfo.contactPhone}
                 </a>
               </li>
             </ul>
             <ul className="mt-6 flex flex-wrap gap-3">
-              {SOCIAL_LINKS.map((social) => (
+              {clubInfo.socialLinks.map((social) => (
                 <li key={social.label}>
                   <a
                     href={social.href}
@@ -107,7 +108,7 @@ export function Footer({ lang }: FooterProps) {
               {dict.footer.partners}
             </h2>
             <ul className="mt-5 space-y-3">
-              {sponsors.slice(0, 4).map((sponsor) => (
+              {clubInfo.sponsors.slice(0, 4).map((sponsor) => (
                 <li key={sponsor.id} className="text-sm">
                   <span className="font-semibold text-white/85">{sponsor.name}</span>
                   <span className="block text-xs text-mist">{sponsor.tagline[lang]}</span>
@@ -119,7 +120,7 @@ export function Footer({ lang }: FooterProps) {
 
         <div className="flex flex-col items-center justify-between gap-4 border-t border-line py-6 text-xs text-mist sm:flex-row">
           <p>
-            © {new Date().getFullYear()} {CLUB.name}. {dict.footer.rights}
+            © {new Date().getFullYear()} {clubInfo.name[lang]}. {dict.footer.rights}
           </p>
           <p className="font-display uppercase tracking-[0.25em] text-crimson-bright/80">
             {dict.common.tagline}

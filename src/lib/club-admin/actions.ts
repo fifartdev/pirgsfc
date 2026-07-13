@@ -16,6 +16,25 @@ function parseRichText(formData: FormData, key: string): unknown {
   }
 }
 
+function statNumber(formData: FormData, key: string): number | undefined {
+  const raw = formData.get(key);
+  if (typeof raw !== "string" || raw.trim() === "") return undefined;
+  const n = parseInt(raw, 10);
+  return Number.isNaN(n) ? undefined : n;
+}
+
+function parseRosterStats(formData: FormData) {
+  return {
+    appearances: statNumber(formData, "statsAppearances") ?? 0,
+    goals: statNumber(formData, "statsGoals") ?? 0,
+    assists: statNumber(formData, "statsAssists") ?? 0,
+    yellowCards: statNumber(formData, "statsYellowCards") ?? 0,
+    redCards: statNumber(formData, "statsRedCards") ?? 0,
+    minutesPlayed: statNumber(formData, "statsMinutesPlayed") ?? 0,
+    cleanSheets: statNumber(formData, "statsCleanSheets"),
+  };
+}
+
 // ─── Public site revalidation ──────────────────────────────────────────────
 // Payload's local API writes bypass Next's fetch/route cache entirely, so a
 // mutation here is invisible on the public site until something explicitly
@@ -26,12 +45,12 @@ const PUBLIC_PATHS = {
   seasons: [],
   teams: ["/men", "/women", "/futsal"],
   leagues: [],
-  players: [],
+  players: ["/men", "/women", "/futsal"],
   venues: ["/matches", "/men", "/women", "/futsal"],
   matches: ["/matches", "/men", "/women", "/futsal"],
   news: ["", "/news"],
-  staff: [],
-  rosters: [],
+  staff: ["/staff"],
+  rosters: ["/men", "/women", "/futsal"],
 } satisfies Record<string, string[]>;
 
 function revalidatePublic(
@@ -175,7 +194,11 @@ export async function updateSeasonAction(_prev: unknown, formData: FormData) {
 
 export async function deleteSeasonAction(id: string) {
   try {
-    const { payload } = await getAuthenticatedPayload();
+    const { payload, user } = await getAuthenticatedPayload();
+    // Manual (docs/CLUB_ADMIN_MANUAL.md §12): deletion is reserved for
+    // superadmin. club_admin passes the general auth check above but must be
+    // rejected here — never delete on their behalf.
+    if (user.role !== "superadmin") throw new Error("Forbidden");
     await payload.delete({ collection: "seasons", id });
     revalidatePath("/club-admin/seasons");
     revalidatePublic("seasons");
@@ -193,7 +216,11 @@ export async function deleteDocumentAction(
   id: string
 ) {
   try {
-    const { payload } = await getAuthenticatedPayload();
+    const { payload, user } = await getAuthenticatedPayload();
+    // Manual (docs/CLUB_ADMIN_MANUAL.md §12): deletion is reserved for
+    // superadmin. club_admin passes the general auth check above but must be
+    // rejected here — never delete on their behalf.
+    if (user.role !== "superadmin") throw new Error("Forbidden");
     await payload.delete({ collection, id });
     revalidatePath(`/club-admin/${collection}`);
     revalidatePublic(collection);
@@ -367,7 +394,7 @@ export async function createPlayerAction(_prev: unknown, formData: FormData) {
       },
     });
     revalidatePath("/club-admin/players");
-    revalidatePublic("players");
+    revalidatePublic("players", [`/roster/${slug}`]);
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
@@ -675,6 +702,7 @@ export async function createRosterAction(_prev: unknown, formData: FormData) {
         isCaptain: formData.get("isCaptain") === "on",
         isViceCaptain: formData.get("isViceCaptain") === "on",
         joinedDate: formData.get("joinedDate") as string || undefined,
+        stats: parseRosterStats(formData),
       },
     });
     revalidatePath("/club-admin/rosters");
@@ -710,6 +738,7 @@ export async function updateRosterAction(_prev: unknown, formData: FormData) {
         isCaptain: formData.get("isCaptain") === "on",
         isViceCaptain: formData.get("isViceCaptain") === "on",
         joinedDate: (formData.get("joinedDate") as string) || undefined,
+        stats: parseRosterStats(formData),
       },
     });
     revalidatePath("/club-admin/rosters");
@@ -758,7 +787,7 @@ export async function updatePlayerAction(_prev: unknown, formData: FormData) {
     const weightRaw = parseInt(formData.get("weightKg") as string);
     const shirtRaw = parseInt(formData.get("defaultShirtNumber") as string);
 
-    await payload.update({
+    const updated = await payload.update({
       collection: "players",
       id,
       data: {
@@ -783,7 +812,8 @@ export async function updatePlayerAction(_prev: unknown, formData: FormData) {
 
     revalidatePath("/club-admin/players");
     revalidatePath(`/club-admin/players/${id}`);
-    revalidatePublic("players");
+    const updatedSlug = typeof updated?.slug === "string" ? updated.slug : undefined;
+    revalidatePublic("players", [updatedSlug && `/roster/${updatedSlug}`]);
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };

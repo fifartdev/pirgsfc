@@ -105,6 +105,39 @@ export const Rosters: CollectionConfig = {
       defaultValue: "active",
       required: true,
     },
+    {
+      name: "stats",
+      label: "Στατιστικά σεζόν",
+      type: "group",
+      admin: {
+        description: "Στατιστικά του παίκτη σε αυτή την ομάδα, για αυτή τη σεζόν.",
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            { name: "appearances", label: "Συμμετοχές", type: "number", min: 0, defaultValue: 0 },
+            { name: "goals", label: "Γκολ", type: "number", min: 0, defaultValue: 0 },
+            { name: "assists", label: "Ασίστ", type: "number", min: 0, defaultValue: 0 },
+          ],
+        },
+        {
+          type: "row",
+          fields: [
+            { name: "yellowCards", label: "Κίτρινες κάρτες", type: "number", min: 0, defaultValue: 0 },
+            { name: "redCards", label: "Κόκκινες κάρτες", type: "number", min: 0, defaultValue: 0 },
+            { name: "minutesPlayed", label: "Λεπτά συμμετοχής", type: "number", min: 0, defaultValue: 0 },
+          ],
+        },
+        {
+          name: "cleanSheets",
+          label: "Καθαρά μηδενικά (τερματοφύλακες)",
+          type: "number",
+          min: 0,
+          admin: { description: "Αφήστε κενό αν ο παίκτης δεν είναι τερματοφύλακας." },
+        },
+      ],
+    },
     { name: "notes", label: "Σημειώσεις", type: "textarea" },
     { name: "sortOrder", label: "Σειρά εμφάνισης", type: "number", defaultValue: 0 },
   ],

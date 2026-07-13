@@ -23,6 +23,8 @@ interface HeaderProps {
   menuOpenLabel: string;
   menuCloseLabel: string;
   languageLabel: string;
+  /** SiteSettings.nav.announcementBar, shown only when announcementBarEnabled is on. */
+  announcement?: string;
 }
 
 export function Header({
@@ -34,6 +36,7 @@ export function Header({
   menuOpenLabel,
   menuCloseLabel,
   languageLabel,
+  announcement,
 }: HeaderProps) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -108,6 +111,14 @@ export function Header({
         </ul>
 
         <div className="hidden items-center gap-3 xl:flex">
+          {announcement && (
+            <span
+              className="hidden max-w-[220px] truncate rounded-full border border-crimson/40 bg-crimson/10 px-3 py-1.5 font-display text-[0.65rem] font-semibold uppercase tracking-widest text-crimson-bright lg:inline-flex"
+              title={announcement}
+            >
+              {announcement}
+            </span>
+          )}
           <Link
             href={switchHref}
             className="inline-flex items-center rounded-full border border-line px-3.5 py-2 font-display text-xs font-bold uppercase tracking-widest text-white/80 transition-colors hover:border-crimson/60 hover:text-crimson-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson"

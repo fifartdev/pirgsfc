@@ -47,7 +47,16 @@ export const SOCIAL_LINKS = [
   { label: "Facebook", href: "https://facebook.com", handle: "PYRGOS AFC" },
 ] as const;
 
-export const SITE_URL = "https://pyrgosafc.example.com";
+// Mirrors the CORS/CSRF origin derivation in payload.config.ts: a single
+// hardcoded domain can't track Vercel's per-deployment preview URLs, and a
+// literal placeholder domain would silently ship into the sitemap, robots.txt,
+// canonical/OG URLs, and JSON-LD in every environment that doesn't set
+// NEXT_PUBLIC_SERVER_URL.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SERVER_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`) ??
+  (process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`) ??
+  "http://localhost:3000";
 
 export const DEPARTMENT_PATHS: Record<"men" | "women" | "futsal", string> = {
   men: "/men",

@@ -5,6 +5,7 @@ import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { CalendarView } from "@/components/sections/CalendarView";
 import { getEventsSorted } from "@/data/calendar";
 import { getDict, hasLang } from "@/i18n";
+import { buildAlternates } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -12,10 +13,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = getDict(hasLang(lang) ? lang : "el");
+  const resolvedLang = hasLang(lang) ? lang : "el";
+  const dict = getDict(resolvedLang);
   return {
     title: `${dict.calendarPage.title1} ${dict.calendarPage.titleAccent}`,
     description: dict.calendarPage.text,
+    alternates: buildAlternates(resolvedLang, "/calendar"),
     openGraph: {
       title: `${dict.calendarPage.title1} ${dict.calendarPage.titleAccent} | PYRGOS AFC`,
       description: dict.calendarPage.text,

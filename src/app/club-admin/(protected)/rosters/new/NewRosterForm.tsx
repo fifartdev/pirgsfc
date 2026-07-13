@@ -42,6 +42,25 @@ export function NewRosterForm({ seasonOptions, teamOptions, playerOptions }: Pro
           { value: "injured", label: "Τραυματίας" },
           { value: "inactive", label: "Ανενεργός" },
         ]} />
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-gray-300">Στατιστικά σεζόν</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <FormField label="Συμμετοχές" name="statsAppearances" type="number" min={0} />
+            <FormField label="Γκολ" name="statsGoals" type="number" min={0} />
+            <FormField label="Ασίστ" name="statsAssists" type="number" min={0} />
+            <FormField label="Κίτρινες κάρτες" name="statsYellowCards" type="number" min={0} />
+            <FormField label="Κόκκινες κάρτες" name="statsRedCards" type="number" min={0} />
+            <FormField label="Λεπτά συμμετοχής" name="statsMinutesPlayed" type="number" min={0} />
+          </div>
+          <div className="mt-4">
+            <FormField
+              label="Καθαρά μηδενικά (τερματοφύλακες)"
+              name="statsCleanSheets"
+              type="number"
+              min={0}
+            />
+          </div>
+        </div>
         <div className="flex gap-3 pt-2">
           <button type="submit" disabled={isPending} className="rounded-lg bg-red-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60">{isPending ? "Αποθήκευση…" : "Αποθήκευση"}</button>
           <Link href="/club-admin/rosters" className="rounded-lg border border-white/10 px-6 py-2.5 text-sm text-gray-300 hover:bg-white/5">Ακύρωση</Link>

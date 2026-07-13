@@ -76,7 +76,13 @@ server build with the API route and proxy intact.
 
 ## Email Delivery
 
-The contact endpoint validates submissions and returns JSON without sending
-email. To enable delivery, copy `.env.local.example` to `.env.local`, configure
-Resend or SMTP credentials, and implement the marked block in
-`src/app/api/contact/route.ts`.
+`POST /api/contact` (`src/app/api/contact/route.ts`) sends via SMTP through
+Nodemailer once `SMTP_HOST`, `SMTP_USER`, and `SMTP_PASS` are set in the
+environment (Vercel project env vars in production; `.env.local` locally).
+Optional: `SMTP_PORT` (default `587`), `SMTP_SECURE` (`"true"`/`"false"`,
+defaults to `true` only when the port is `465`), and
+`CONTACT_RECIPIENT_EMAIL` (defaults to `CLUB.contact.email` in
+`src/lib/constants.ts`). Without SMTP credentials set, the endpoint still
+validates submissions and returns success, but sends nothing — safe to run in
+dev/preview without real credentials. `RESEND_API_KEY` is read but not wired
+up; this project uses SMTP as its transport.

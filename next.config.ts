@@ -20,6 +20,25 @@ const nextConfig: NextConfig = isStaticExport
           { protocol: "https", hostname: "**" },
         ],
       },
+      // `headers()` is unsupported (and unnecessary) under `output: "export"`,
+      // so this only applies to the normal server build. No CSP here — the
+      // site relies on inline JSON-LD <script> tags (src/app/[lang]/layout.tsx)
+      // and a strict script-src would need per-request nonces to keep those
+      // working; that's a larger, riskier change than this baseline hardening.
+      async headers() {
+        return [
+          {
+            source: "/:path*",
+            headers: [
+              { key: "X-Content-Type-Options", value: "nosniff" },
+              { key: "X-Frame-Options", value: "DENY" },
+              { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+              { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+              { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+            ],
+          },
+        ];
+      },
     };
 
 // Skip Payload integration when building a static export (no database needed)

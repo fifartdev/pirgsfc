@@ -58,6 +58,8 @@ export interface Match {
   venue: LocalizedText;
   status: MatchStatus;
   matchweek?: LocalizedText;
+  /** Actual competition name from Payload's Leagues collection, e.g. "Regional Men's League". */
+  leagueName?: LocalizedText;
 }
 
 export type CalendarEventType =
@@ -120,6 +122,10 @@ export interface Sponsor {
   name: string;
   tier: SponsorTier;
   tagline: LocalizedText;
+  /** Sponsor's own website, from Payload's ClubInfo.sponsors — absent for static demo sponsors. */
+  url?: string;
+  /** Sponsor logo URL, from Payload's ClubInfo.sponsors — absent for static demo sponsors. */
+  logoUrl?: string;
 }
 
 export interface AcademyGroup {

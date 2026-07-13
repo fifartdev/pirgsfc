@@ -4,8 +4,9 @@ import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StaffCard } from "@/components/cards/StaffCard";
-import { staff } from "@/data/staff";
+import { getCmsStaff } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
+import { buildAlternates } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -13,10 +14,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = getDict(hasLang(lang) ? lang : "el");
+  const resolvedLang = hasLang(lang) ? lang : "el";
+  const dict = getDict(resolvedLang);
   return {
     title: `${dict.staffPage.title1} ${dict.staffPage.titleAccent}`,
     description: dict.staffPage.text,
+    alternates: buildAlternates(resolvedLang, "/staff"),
     openGraph: {
       title: `${dict.staffPage.title1} ${dict.staffPage.titleAccent} | PYRGOS AFC`,
       description: dict.staffPage.text,
@@ -29,6 +32,7 @@ export default async function StaffPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
+  const staff = await getCmsStaff();
 
   return (
     <>

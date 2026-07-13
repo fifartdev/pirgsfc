@@ -7,6 +7,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Per-page `generateMetadata` `alternates` block: a self-referencing
+ * canonical for the current locale, plus correct hreflang links to the *same*
+ * page in the other locale. `path` is the locale-agnostic route (e.g. "/news"
+ * or "/news/some-slug", "/" for home) — do not pass an already-prefixed path.
+ * The root layout previously set one hardcoded `alternates.languages` for
+ * every page (always pointing at the homepage); every page-level
+ * `generateMetadata` should call this instead.
+ */
+export function buildAlternates(lang: Lang, path: string) {
+  return {
+    canonical: localeHref(lang, path),
+    languages: {
+      el: localeHref("el", path),
+      en: localeHref("en", path),
+    },
+  };
+}
+
 export function formatDate(dateString: string, lang: Lang): string {
   const date = new Date(`${dateString}T00:00:00`);
   return date.toLocaleDateString(dateLocale(lang), {

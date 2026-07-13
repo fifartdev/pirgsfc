@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PlayerCard } from "@/components/cards/PlayerCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { players, getPlayerBySlug } from "@/data/players";
+import { players } from "@/data/players";
 import { getCmsPlayerBySlug, getCmsRelatedPlayers } from "@/lib/cms-data";
-import { DEPARTMENT_PATHS } from "@/lib/constants";
+import { DEPARTMENT_PATHS, SITE_URL } from "@/lib/constants";
 import { getDict, hasLang } from "@/i18n";
-import { formatDateLong, initialsOf, localeHref } from "@/lib/utils";
+import { formatDateLong, initialsOf, localeHref, buildAlternates } from "@/lib/utils";
+import { personJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 interface PlayerPageProps {
   params: Promise<{ lang: string; slug: string }>;
@@ -26,15 +27,17 @@ export async function generateMetadata({ params }: PlayerPageProps): Promise<Met
   const { lang: langParam, slug } = await params;
   const lang = hasLang(langParam) ? langParam : "el";
   const dict = getDict(lang);
-  const player = getPlayerBySlug(slug);
+  const player = await getCmsPlayerBySlug(slug);
   if (!player) return { title: "Not Found" };
   const fullName = `${player.firstName[lang]} ${player.lastName[lang]}`;
   return {
     title: `${fullName} — #${player.number}`,
     description: `${fullName} · ${dict.positions[player.position]} · PYRGOS AFC`,
+    alternates: buildAlternates(lang, `/roster/${slug}`),
     openGraph: {
       title: `${fullName} | PYRGOS AFC`,
       description: `${dict.positions[player.position]} · #${player.number} · PYRGOS AFC`,
+      images: player.photoUrl ? [{ url: player.photoUrl, alt: fullName }] : undefined,
     },
   };
 }
@@ -53,6 +56,19 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
     notFound();
   }
   const teamHref = localeHref(lang, DEPARTMENT_PATHS[player.department]);
+  const fullName = `${player.firstName[lang]} ${player.lastName[lang]}`;
+
+  const playerLd = personJsonLd({
+    name: fullName,
+    url: `${SITE_URL}${localeHref(lang, `/roster/${player.slug}`)}`,
+    jobTitle: dict.positions[player.position],
+    nationality: player.nationality[lang],
+  });
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: dict.nav.home, url: `${SITE_URL}${localeHref(lang, "/")}` },
+    { name: dict.departments[player.department], url: `${SITE_URL}${teamHref}` },
+    { name: fullName, url: `${SITE_URL}${localeHref(lang, `/roster/${player.slug}`)}` },
+  ]);
 
   const statItems = [
     { label: dict.common.appearances, value: player.stats.appearances },
@@ -68,6 +84,14 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(playerLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       {/* Hero profile */}
       <section className="noise relative overflow-hidden bg-night pb-20 pt-40 sm:pb-28">
         <div className="stadium-lights" aria-hidden="true" />

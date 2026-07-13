@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Crest } from "@/components/ui/Crest";
 import { StatCard } from "@/components/cards/StatCard";
 import { ClubValues } from "@/components/sections/ClubValues";
-import { CLUB } from "@/lib/constants";
+import { getCmsClubInfo } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
-import { localeHref } from "@/lib/utils";
+import { localeHref, buildAlternates } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ lang: string }>;
@@ -18,10 +18,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = getDict(hasLang(lang) ? lang : "el");
+  const resolvedLang = hasLang(lang) ? lang : "el";
+  const dict = getDict(resolvedLang);
   return {
     title: dict.nav.club,
     description: dict.about.heroText,
+    alternates: buildAlternates(resolvedLang, "/about"),
     openGraph: { title: `${dict.nav.club} | PYRGOS AFC`, description: dict.about.heroText },
   };
 }
@@ -31,6 +33,7 @@ export default async function AboutPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
+  const clubInfo = await getCmsClubInfo();
 
   return (
     <>
@@ -91,6 +94,23 @@ export default async function AboutPage({ params }: PageProps) {
         </Container>
       </section>
 
+      {/* Club-admin editable "about" text (ClubInfo.about/aboutEn), shown only
+          when a superadmin/club_admin has actually written something there —
+          this section doesn't exist in the static/dict content, it's purely
+          additive so club-admin content editors have somewhere to publish
+          long-form updates without a code change. */}
+      {clubInfo.about[lang] && (
+        <section className="relative pb-24 sm:pb-0">
+          <Container className="max-w-3xl">
+            <AnimatedReveal>
+              <p className="whitespace-pre-line text-base leading-relaxed text-mist">
+                {clubInfo.about[lang]}
+              </p>
+            </AnimatedReveal>
+          </Container>
+        </section>
+      )}
+
       {/* History timeline */}
       <section className="relative py-24 sm:py-32">
         <Container>
@@ -145,7 +165,7 @@ export default async function AboutPage({ params }: PageProps) {
                       {dict.about.capacity}
                     </dt>
                     <dd className="mt-1 font-display text-2xl font-extrabold text-crimson-bright">
-                      {CLUB.stadium.capacity}
+                      {clubInfo.stadiumCapacity}
                     </dd>
                   </div>
                   <div>
@@ -153,7 +173,7 @@ export default async function AboutPage({ params }: PageProps) {
                       {dict.about.opened}
                     </dt>
                     <dd className="mt-1 font-display text-2xl font-extrabold text-crimson-bright">
-                      {CLUB.stadium.opened}
+                      {clubInfo.stadiumOpened}
                     </dd>
                   </div>
                   <div className="col-span-2">
@@ -161,7 +181,7 @@ export default async function AboutPage({ params }: PageProps) {
                       {dict.about.address}
                     </dt>
                     <dd className="mt-1 text-sm text-white/85">
-                      {CLUB.contact.address[lang]}
+                      {clubInfo.contactAddress[lang]}
                     </dd>
                   </div>
                 </dl>

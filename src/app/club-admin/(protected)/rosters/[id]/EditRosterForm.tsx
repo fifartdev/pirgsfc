@@ -17,6 +17,13 @@ export interface RosterEditData {
   isCaptain?: boolean;
   isViceCaptain?: boolean;
   joinedDate?: string;
+  statsAppearances?: number;
+  statsGoals?: number;
+  statsAssists?: number;
+  statsYellowCards?: number;
+  statsRedCards?: number;
+  statsMinutesPlayed?: number;
+  statsCleanSheets?: number;
 }
 
 interface Props {
@@ -81,6 +88,27 @@ export function EditRosterForm({ roster, seasonOptions, teamOptions, playerOptio
             { value: "inactive", label: "Ανενεργός" },
           ]}
         />
+
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-gray-300">Στατιστικά σεζόν</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <FormField label="Συμμετοχές" name="statsAppearances" type="number" min={0} defaultValue={roster.statsAppearances} />
+            <FormField label="Γκολ" name="statsGoals" type="number" min={0} defaultValue={roster.statsGoals} />
+            <FormField label="Ασίστ" name="statsAssists" type="number" min={0} defaultValue={roster.statsAssists} />
+            <FormField label="Κίτρινες κάρτες" name="statsYellowCards" type="number" min={0} defaultValue={roster.statsYellowCards} />
+            <FormField label="Κόκκινες κάρτες" name="statsRedCards" type="number" min={0} defaultValue={roster.statsRedCards} />
+            <FormField label="Λεπτά συμμετοχής" name="statsMinutesPlayed" type="number" min={0} defaultValue={roster.statsMinutesPlayed} />
+          </div>
+          <div className="mt-4">
+            <FormField
+              label="Καθαρά μηδενικά (τερματοφύλακες)"
+              name="statsCleanSheets"
+              type="number"
+              min={0}
+              defaultValue={roster.statsCleanSheets}
+            />
+          </div>
+        </div>
 
         <div className="flex gap-3 pt-2">
           <button

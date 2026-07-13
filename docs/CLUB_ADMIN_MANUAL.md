@@ -220,9 +220,12 @@ A roster entry links one player to one team for one season. This is how the webs
    - **Ημ. εγγραφής** — date the player joined this roster
    - **Αρχηγός / Αντιαρχηγός** — captain / vice-captain checkboxes
    - **Κατάσταση** — `Ενεργός` · `Δανεισμός` · `Μεταγραφή` · `Τραυματίας` · `Ανενεργός`
+   - **Στατιστικά σεζόν** — appearances, goals, assists, yellow cards, red cards, minutes played, and clean sheets (goalkeepers only) *for this player, on this team, this season*. Shown on the player's public profile page. Leave clean sheets empty for outfield players.
 4. Click **"Αποθήκευση"**.
 
-> A player can appear in multiple roster entries — for example, the same player can be in both the Men's and Futsal rosters in the same season.
+> A player can appear in multiple roster entries — for example, the same player can be in both the Men's and Futsal rosters in the same season. Each roster entry has its own independent stats, since the same player's numbers for the Men's team aren't the same as for Futsal.
+
+> **Why stats live here and not on the player's own profile:** a player's appearances/goals/etc. are specific to one team in one season, not a fixed property of the player. Update them as the season progresses via the roster entry's edit form.
 
 ---
 
@@ -283,7 +286,7 @@ Path: `/club-admin/news`
    - **Κύρια εικόνα άρθρου** — optional featured image. Click **"Επιλογή εικόνας"** to open the file browser and select a JPG, PNG, or WebP file; it uploads immediately and a preview appears. You can also add or replace it later from the edit form.
 3. Click **"Αποθήκευση"**. The article is created and you return to the list.
 
-> Rich text body content (full article text) is not editable in this panel. Contact the superadmin to add or edit article body text.
+Both the Greek and English rich text body (the full article content) are editable directly in this panel — see the **"Περιεχόμενο"** editor on the create/edit form.
 
 ### Edit an article & upload a featured image
 
@@ -336,9 +339,8 @@ Slugs (URL identifiers) are automatically generated from the English name when a
 
 ### Access limits
 
-Club admins have access to all sections of this panel. They **cannot**:
+Club admins have access to all sections of this panel, including editing article body content (rich text). They **cannot**:
 - Access the Payload superadmin panel at `/admin`
-- Edit article body content (rich text)
 - Delete records from the database
 - Change user passwords or roles
 
