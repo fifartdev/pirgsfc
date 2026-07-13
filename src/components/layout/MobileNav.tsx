@@ -18,6 +18,7 @@ interface MobileNavProps {
   otherLangLabel: string;
   menuOpenLabel: string;
   menuCloseLabel: string;
+  showLanguageSwitch?: boolean;
 }
 
 export function MobileNav({
@@ -30,6 +31,7 @@ export function MobileNav({
   otherLangLabel,
   menuOpenLabel,
   menuCloseLabel,
+  showLanguageSwitch = true,
 }: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
@@ -130,13 +132,15 @@ export function MobileNav({
                   >
                     {matchdayLabel}
                   </Link>
-                  <Link
-                    href={switchHref}
-                    onClick={() => setOpen(false)}
-                    className="inline-flex items-center rounded-full border border-line px-6 py-4 font-display text-sm font-bold uppercase tracking-widest text-white/85"
-                  >
-                    {otherLangLabel}
-                  </Link>
+                  {showLanguageSwitch && (
+                    <Link
+                      href={switchHref}
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center rounded-full border border-line px-6 py-4 font-display text-sm font-bold uppercase tracking-widest text-white/85"
+                    >
+                      {otherLangLabel}
+                    </Link>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-mist">
                   <Crest size="sm" />

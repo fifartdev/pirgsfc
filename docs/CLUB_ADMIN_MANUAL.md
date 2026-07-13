@@ -18,8 +18,9 @@
 8. [Staff (Τεχνική Ομάδα)](#8-staff-τεχνική-ομάδα)
 9. [Rosters (Ρόστερ)](#9-rosters-ρόστερ)
 10. [Matches (Αγώνες)](#10-matches-αγώνες)
-11. [News (Νέα)](#11-news-νέα)
-12. [Important Rules](#12-important-rules)
+11. [Standings (Βαθμολογία)](#11-standings-βαθμολογία)
+12. [News (Νέα)](#12-news-νέα)
+13. [Important Rules](#13-important-rules)
 
 ---
 
@@ -269,7 +270,39 @@ Path: `/club-admin/matches`
 
 ---
 
-## 11. News (Νέα)
+## 11. Standings (Βαθμολογία)
+
+Path: `/club-admin/standings`
+
+A standings entry is one team's row in the league table for one competition, in one season. The public `/standings` page groups all entries by competition and sorts them by position.
+
+> **This is entered by hand, not calculated automatically.** The site only records PYRGOS AFC's own match results — it has no data about matches between other clubs — so there is no way to compute a full league table automatically. Update each team's row yourself from the official league standings whenever they change (after each matchday, typically).
+
+### Create a standings entry
+
+1. Click **"Νέα Εγγραφή"**.
+2. Select:
+   - **Σεζόν** — the season this table applies to (required)
+   - **Διοργάνωση** — the competition (required)
+3. Fill in:
+   - **Ομάδα (ελλ. / αγγλ.)** — the team's name (required). This is free text — rival clubs aren't managed elsewhere in this panel.
+   - **Ο PYRGOS AFC** — tick this for PYRGOS AFC's own row. It's highlighted on the public page.
+   - **Θέση** — the team's position/rank in the table (required)
+   - **Αγώνες / Νίκες / Ισοπαλίες / Ήττες** — matches played, won, drawn, lost
+   - **Γκολ υπέρ / Γκολ κατά** — goals for/against
+   - **Βαθμοί** — points
+   - **Σημειώσεις** — optional, e.g. a points deduction; shown under the team's name on the public page
+4. Click **"Αποθήκευση"**.
+
+> You need one entry per team in the table, not just PYRGOS AFC's — enter every team's row for the table to display correctly. Only entries belonging to the **current season** (the one marked "Τρέχουσα σεζόν" under Seasons) are shown publicly.
+
+### Team stats (separate from standings)
+
+Each department page (`/men`, `/women`, `/futsal`) also shows a "Season Record" block — PYRGOS AFC's own played/won/drawn/lost/goal difference/points. Unlike Standings, **this is calculated automatically** from the Matches you've already entered with the `Ολοκληρώθηκε` status and a final score — there's nothing to fill in for it separately.
+
+---
+
+## 12. News (Νέα)
 
 Path: `/club-admin/news`
 
@@ -310,7 +343,7 @@ Both the Greek and English rich text body (the full article content) are editabl
 
 ---
 
-## 12. Important Rules
+## 13. Important Rules
 
 ### Records are never deleted
 
@@ -332,6 +365,8 @@ Do not delete seasons, players, or matches if they have dependent records (roste
 ### Bilingual content
 
 The public website supports Greek (`/el/`) and English (`/en/`). For content to appear in both languages, fill in both the Greek and English fields. If the English field is left blank, the Greek text is used as a fallback on the English version of the site.
+
+English can be turned off site-wide (e.g. while English content isn't ready): every `/en/...` page redirects to the Greek homepage, the language switcher disappears from the header, and English pages are removed from the sitemap so search engines stop offering them. This is the **"Ενεργοποίηση αγγλικής γλώσσας"** setting — currently only changeable by the superadmin in the Payload admin panel (Site Settings), until a club-admin screen for it is built.
 
 ### Slugs and URLs
 

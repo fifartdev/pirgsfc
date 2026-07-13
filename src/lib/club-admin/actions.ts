@@ -51,6 +51,7 @@ const PUBLIC_PATHS = {
   news: ["", "/news"],
   staff: ["/staff"],
   rosters: ["/men", "/women", "/futsal"],
+  standings: ["/standings"],
 } satisfies Record<string, string[]>;
 
 function revalidatePublic(
@@ -212,7 +213,7 @@ export async function deleteSeasonAction(id: string) {
 // ─── GENERIC DELETE ───────────────────────────────────────────────────────────
 
 export async function deleteDocumentAction(
-  collection: "seasons" | "teams" | "leagues" | "players" | "venues" | "matches" | "news" | "staff",
+  collection: "seasons" | "teams" | "leagues" | "players" | "venues" | "matches" | "news" | "staff" | "standings",
   id: string
 ) {
   try {
@@ -859,6 +860,68 @@ export async function updateNewsAction(_prev: unknown, formData: FormData) {
     revalidatePath("/club-admin/news");
     revalidatePath(`/club-admin/news/${id}`);
     revalidatePublic("news", [typeof doc.slug === "string" ? `/news/${doc.slug}` : undefined]);
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+// ─── STANDINGS ─────────────────────────────────────────────────────────────
+
+function parseStandingData(formData: FormData) {
+  return {
+    season: formData.get("season") as string,
+    league: formData.get("league") as string,
+    teamName: (formData.get("teamName") as string)?.trim(),
+    teamNameEn: (formData.get("teamNameEn") as string)?.trim() || undefined,
+    isPyrgos: formData.get("isPyrgos") === "on",
+    position: parseInt(formData.get("position") as string) || undefined,
+    played: statNumber(formData, "played") ?? 0,
+    won: statNumber(formData, "won") ?? 0,
+    drawn: statNumber(formData, "drawn") ?? 0,
+    lost: statNumber(formData, "lost") ?? 0,
+    goalsFor: statNumber(formData, "goalsFor") ?? 0,
+    goalsAgainst: statNumber(formData, "goalsAgainst") ?? 0,
+    points: statNumber(formData, "points") ?? 0,
+    notes: (formData.get("notes") as string)?.trim() || undefined,
+  };
+}
+
+export async function createStandingAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const data = parseStandingData(formData);
+    if (!data.season || !data.league) {
+      return { error: "Η σεζόν και η διοργάνωση είναι υποχρεωτικές." };
+    }
+    if (!data.teamName) return { error: "Το όνομα ομάδας είναι υποχρεωτικό." };
+    if (!data.position) return { error: "Η θέση είναι υποχρεωτική." };
+
+    await payload.create({ collection: "standings", data });
+    revalidatePath("/club-admin/standings");
+    revalidatePublic("standings");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateStandingAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    const data = parseStandingData(formData);
+    if (!data.season || !data.league) {
+      return { error: "Η σεζόν και η διοργάνωση είναι υποχρεωτικές." };
+    }
+    if (!data.teamName) return { error: "Το όνομα ομάδας είναι υποχρεωτικό." };
+    if (!data.position) return { error: "Η θέση είναι υποχρεωτική." };
+
+    await payload.update({ collection: "standings", id, data });
+    revalidatePath("/club-admin/standings");
+    revalidatePath(`/club-admin/standings/${id}`);
+    revalidatePublic("standings");
     return { success: true };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };

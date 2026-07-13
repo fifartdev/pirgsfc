@@ -25,6 +25,8 @@ interface HeaderProps {
   languageLabel: string;
   /** SiteSettings.nav.announcementBar, shown only when announcementBarEnabled is on. */
   announcement?: string;
+  /** SiteSettings.bilingualEnabled — hides the language switcher entirely when English is disabled. */
+  showLanguageSwitch?: boolean;
 }
 
 export function Header({
@@ -37,6 +39,7 @@ export function Header({
   menuCloseLabel,
   languageLabel,
   announcement,
+  showLanguageSwitch = true,
 }: HeaderProps) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -119,13 +122,15 @@ export function Header({
               {announcement}
             </span>
           )}
-          <Link
-            href={switchHref}
-            className="inline-flex items-center rounded-full border border-line px-3.5 py-2 font-display text-xs font-bold uppercase tracking-widest text-white/80 transition-colors hover:border-crimson/60 hover:text-crimson-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson"
-            aria-label={`${languageLabel}: ${otherLang === "el" ? "Ελληνικά" : "English"}`}
-          >
-            {otherLang.toUpperCase()}
-          </Link>
+          {showLanguageSwitch && (
+            <Link
+              href={switchHref}
+              className="inline-flex items-center rounded-full border border-line px-3.5 py-2 font-display text-xs font-bold uppercase tracking-widest text-white/80 transition-colors hover:border-crimson/60 hover:text-crimson-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson"
+              aria-label={`${languageLabel}: ${otherLang === "el" ? "Ελληνικά" : "English"}`}
+            >
+              {otherLang.toUpperCase()}
+            </Link>
+          )}
           <Link
             href={localeHref(lang, "/matches")}
             className="inline-flex items-center rounded-full bg-crimson px-5 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:bg-crimson-bright hover:shadow-glow-crimson focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson"
@@ -144,6 +149,7 @@ export function Header({
           otherLangLabel={otherLang === "el" ? "Ελληνικά" : "English"}
           menuOpenLabel={menuOpenLabel}
           menuCloseLabel={menuCloseLabel}
+          showLanguageSwitch={showLanguageSwitch}
         />
       </nav>
     </header>

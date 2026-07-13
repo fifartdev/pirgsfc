@@ -31,6 +31,16 @@ export const SiteSettings: GlobalConfig = {
       defaultValue: false,
     },
     {
+      name: "bilingualEnabled",
+      label: "Ενεργοποίηση αγγλικής γλώσσας",
+      type: "checkbox",
+      defaultValue: true,
+      admin: {
+        description:
+          "Όταν είναι απενεργοποιημένο, οι αγγλικές σελίδες (/en/...) ανακατευθύνονται στην ελληνική έκδοση, εξαιρούνται από το sitemap και ο επιλογέας γλώσσας κρύβεται.",
+      },
+    },
+    {
       name: "defaultSeoTitle",
       label: "Προεπιλεγμένος SEO τίτλος",
       type: "text",

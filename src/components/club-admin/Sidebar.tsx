@@ -13,6 +13,7 @@ import {
   UserCog,
   Shield,
   BookOpen,
+  ListOrdered,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const NAV = [
   { href: "/club-admin/rosters", label: "Ρόστερ", icon: BookOpen },
   { href: "/club-admin/venues", label: "Γήπεδα", icon: MapPin },
   { href: "/club-admin/matches", label: "Αγώνες", icon: Trophy },
+  { href: "/club-admin/standings", label: "Βαθμολογία", icon: ListOrdered },
   { href: "/club-admin/news", label: "Νέα", icon: Newspaper },
   { href: "/club-admin/staff", label: "Προσωπικό", icon: UserCog },
 ];

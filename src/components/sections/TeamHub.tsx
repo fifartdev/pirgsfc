@@ -3,11 +3,15 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { RosterGrid } from "@/components/sections/RosterGrid";
 import { MatchCard } from "@/components/cards/MatchCard";
+import { StatCard } from "@/components/cards/StatCard";
+import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import { getPlayersByDepartment } from "@/data/players";
 import { getUpcomingMatches, getCompletedMatches } from "@/data/matches";
 import { getDict } from "@/i18n";
+import { localeHref } from "@/lib/utils";
 import type { Department, Lang, Match, Player } from "@/types";
+import type { TeamStats } from "@/lib/cms-data";
 
 interface TeamHubProps {
   lang: Lang;
@@ -22,10 +26,12 @@ interface TeamHubProps {
   logoUrl?: string;
   /** Pre-fetched squad from CMS (with profile photos); falls back to static data when omitted. */
   players?: Player[];
+  /** PYRGOS AFC's own season record, auto-computed from completed Matches. */
+  stats?: TeamStats;
 }
 
 /** Shared page body for the men's, women's, and futsal team sections. */
-export function TeamHub({ lang, department, eyebrow, title, titleAccent, text, matches, logoUrl, players }: TeamHubProps) {
+export function TeamHub({ lang, department, eyebrow, title, titleAccent, text, matches, logoUrl, players, stats }: TeamHubProps) {
   const dict = getDict(lang);
   const squad = players ?? getPlayersByDepartment(department);
   const deptMatches = matches ?? [
@@ -70,6 +76,33 @@ export function TeamHub({ lang, department, eyebrow, title, titleAccent, text, m
           </AnimatedReveal>
         </Container>
       </section>
+
+      {stats && stats.played > 0 && (
+        <section className="relative pb-16" aria-label={dict.standings.teamRecordTitle}>
+          <Container>
+            <AnimatedReveal>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <SectionHeading eyebrow={dict.common.season} title={dict.standings.teamRecordTitle} />
+                <Button href={localeHref(lang, "/standings")} variant="outline">
+                  {dict.standings.viewStandings}
+                </Button>
+              </div>
+              <div className="mt-8 grid grid-cols-3 gap-4 sm:grid-cols-6">
+                <StatCard value={String(stats.played)} label={dict.standings.played} accent="smoke" />
+                <StatCard value={String(stats.won)} label={dict.standings.won} accent="crimson" />
+                <StatCard value={String(stats.drawn)} label={dict.standings.drawn} accent="smoke" />
+                <StatCard value={String(stats.lost)} label={dict.standings.lost} accent="smoke" />
+                <StatCard
+                  value={stats.goalDifference > 0 ? `+${stats.goalDifference}` : String(stats.goalDifference)}
+                  label={dict.standings.goalDifference}
+                  accent="smoke"
+                />
+                <StatCard value={String(stats.points)} label={dict.standings.points} accent="crimson" />
+              </div>
+            </AnimatedReveal>
+          </Container>
+        </section>
+      )}
 
       <section className="relative pb-20" aria-label={dict.teams.squadTitle}>
         <Container>

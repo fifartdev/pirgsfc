@@ -36,6 +36,7 @@ export type NavKey = (typeof NAV_ITEMS)[number]["key"];
 
 export const FOOTER_EXTRA_PATHS = [
   { key: "fixtures", path: "/matches" },
+  { key: "standings", path: "/standings" },
   { key: "calendar", path: "/calendar" },
   { key: "staff", path: "/staff" },
 ] as const;

@@ -696,16 +696,18 @@ export const getCmsClubInfo = cache(async (): Promise<ClubInfoData> => {
 
 export interface SiteSettingsData {
   maintenanceMode: boolean;
+  bilingualEnabled: boolean;
   googleAnalyticsId?: string;
   cookieBannerEnabled: boolean;
   announcementBar?: string;
   announcementBarEnabled: boolean;
 }
 
-/** Site-operational toggles (maintenance mode, analytics, cookie banner, announcement bar) from Payload. */
+/** Site-operational toggles (maintenance mode, bilingual on/off, analytics, cookie banner, announcement bar) from Payload. */
 export const getCmsSiteSettings = cache(async (): Promise<SiteSettingsData> => {
   const fallback: SiteSettingsData = {
     maintenanceMode: false,
+    bilingualEnabled: true,
     cookieBannerEnabled: false,
     announcementBarEnabled: false,
   };
@@ -717,6 +719,7 @@ export const getCmsSiteSettings = cache(async (): Promise<SiteSettingsData> => {
     const nav = (doc.nav as PayloadDoc) ?? {};
     return {
       maintenanceMode: Boolean(doc.maintenanceMode),
+      bilingualEnabled: doc.bilingualEnabled !== false,
       googleAnalyticsId: typeof doc.googleAnalyticsId === "string" && doc.googleAnalyticsId ? doc.googleAnalyticsId : undefined,
       cookieBannerEnabled: Boolean(doc.cookieBannerEnabled),
       announcementBar: typeof nav.announcementBar === "string" && nav.announcementBar ? nav.announcementBar : undefined,
@@ -726,3 +729,141 @@ export const getCmsSiteSettings = cache(async (): Promise<SiteSettingsData> => {
     return fallback;
   }
 });
+
+// ─── Standings ─────────────────────────────────────────────────────────────
+// Manually maintained (src/collections/Standings.ts) — this site only records
+// PYRGOS AFC's own fixtures (see mapMatch above), not every match between
+// rival clubs, so a full multi-team table can't be computed from Matches.
+// No static fallback: there's no precedent demo data for this, so an empty
+// result is the correct "nothing entered yet" state, not an error.
+
+export interface StandingRow {
+  teamName: LocalizedText;
+  isPyrgos: boolean;
+  position: number;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  notes?: string;
+}
+
+export interface LeagueStandings {
+  leagueName: LocalizedText;
+  leagueSlug: string;
+  rows: StandingRow[];
+}
+
+/** Multi-team league tables for the current season, grouped by league, each sorted by position. */
+export async function getCmsStandings(): Promise<LeagueStandings[]> {
+  if (process.env.STATIC_EXPORT === "1") return [];
+  try {
+    const payload = await getPayloadClient();
+    if (!payload) return [];
+    const seasonRes = await payload.find({
+      collection: "seasons",
+      where: { isCurrent: { equals: true } },
+      limit: 1,
+    });
+    const seasonId = (seasonRes.docs[0] as PayloadDoc | undefined)?.id;
+    if (seasonId == null) return [];
+
+    const res = await payload.find({
+      collection: "standings",
+      where: { season: { equals: seasonId } },
+      sort: "position",
+      limit: 500,
+      depth: 1,
+    });
+
+    const grouped = new Map<string, LeagueStandings>();
+    for (const doc of res.docs as PayloadDoc[]) {
+      const league = doc.league;
+      if (!league || typeof league !== "object") continue;
+      const l = league as PayloadDoc;
+      const leagueId = String(l.id ?? "");
+      if (!grouped.has(leagueId)) {
+        grouped.set(leagueId, {
+          leagueName: { el: String(l.name ?? ""), en: String(l.nameEn ?? l.name ?? "") },
+          leagueSlug: String(l.slug ?? leagueId),
+          rows: [],
+        });
+      }
+      const goalsFor = Number(doc.goalsFor ?? 0);
+      const goalsAgainst = Number(doc.goalsAgainst ?? 0);
+      grouped.get(leagueId)!.rows.push({
+        teamName: { el: String(doc.teamName ?? ""), en: String(doc.teamNameEn ?? doc.teamName ?? "") },
+        isPyrgos: Boolean(doc.isPyrgos),
+        position: Number(doc.position ?? 0),
+        played: Number(doc.played ?? 0),
+        won: Number(doc.won ?? 0),
+        drawn: Number(doc.drawn ?? 0),
+        lost: Number(doc.lost ?? 0),
+        goalsFor,
+        goalsAgainst,
+        goalDifference: goalsFor - goalsAgainst,
+        points: Number(doc.points ?? 0),
+        notes: typeof doc.notes === "string" && doc.notes ? doc.notes : undefined,
+      });
+    }
+    return [...grouped.values()].map((league) => ({
+      ...league,
+      rows: league.rows.sort((a, b) => a.position - b.position),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ─── Auto-computed team stats ─────────────────────────────────────────────
+// Distinct from Standings above: this is PYRGOS AFC's own record, rolled up
+// from its own completed Matches — always accurate, no admin data entry.
+
+export interface TeamStats {
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+}
+
+/** PYRGOS AFC's own played/won/drawn/lost/goals/points for a department, computed from completed Matches. */
+export async function getCmsTeamStats(department?: Department): Promise<TeamStats> {
+  const completed = await getCmsCompletedMatches(department);
+  let played = 0;
+  let won = 0;
+  let drawn = 0;
+  let lost = 0;
+  let goalsFor = 0;
+  let goalsAgainst = 0;
+
+  for (const match of completed) {
+    if (match.homeScore === undefined || match.awayScore === undefined) continue;
+    played++;
+    const pyrgosScore = match.homeIsPyrgos ? match.homeScore : match.awayScore;
+    const opponentScore = match.homeIsPyrgos ? match.awayScore : match.homeScore;
+    goalsFor += pyrgosScore;
+    goalsAgainst += opponentScore;
+    if (pyrgosScore > opponentScore) won++;
+    else if (pyrgosScore < opponentScore) lost++;
+    else drawn++;
+  }
+
+  return {
+    played,
+    won,
+    drawn,
+    lost,
+    goalsFor,
+    goalsAgainst,
+    goalDifference: goalsFor - goalsAgainst,
+    points: won * 3 + drawn,
+  };
+}

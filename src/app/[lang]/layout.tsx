@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter, Manrope } from "next/font/google";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CookieBanner } from "@/components/layout/CookieBanner";
@@ -84,6 +84,16 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
   const dict = getDict(lang);
   const siteSettings = await getCmsSiteSettings();
 
+  // English disabled: bounce every /en/* request to the Greek homepage.
+  // Layouts don't have access to the full matched sub-path (only middleware
+  // does), so this can't preserve the exact page being requested — it's a
+  // deliberate simplification for what is meant to be a coarse, whole-site
+  // toggle, not a per-page fallback. `/club-admin` and `/admin` are outside
+  // this layout entirely, so this never affects the admin panels themselves.
+  if (lang === "en" && !siteSettings.bilingualEnabled) {
+    redirect("/");
+  }
+
   // Maintenance mode only gates the public `[lang]` route tree — /club-admin
   // and /admin live outside this layout, so admins can always get in to turn
   // it back off.
@@ -148,6 +158,7 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
           announcement={
             siteSettings.announcementBarEnabled ? siteSettings.announcementBar : undefined
           }
+          showLanguageSwitch={siteSettings.bilingualEnabled}
         />
         <main className="flex-1">{children}</main>
         <Footer lang={lang} />
