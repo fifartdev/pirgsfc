@@ -38,11 +38,19 @@ export function NextMatch({ match, lang }: NextMatchProps) {
             />
 
             <div className="relative grid items-center gap-10 lg:grid-cols-[1fr_auto_1fr]">
-              <div className="text-center lg:text-right">
+              <div className="flex flex-col items-center gap-3 text-center lg:items-end lg:text-right">
+                {match.homeTeamLogoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={match.homeTeamLogoUrl}
+                    alt=""
+                    className="h-14 w-14 object-contain"
+                  />
+                )}
                 <p className="font-display text-3xl font-extrabold uppercase tracking-wide text-crimson-bright sm:text-4xl">
                   {match.homeTeam[lang]}
                 </p>
-                <p className="mt-2 text-sm text-mist">{dict.common.home}</p>
+                <p className="text-sm text-mist">{dict.common.home}</p>
               </div>
 
               <div className="flex flex-col items-center gap-3">
@@ -52,14 +60,24 @@ export function NextMatch({ match, lang }: NextMatchProps) {
                 >
                   VS
                 </span>
-                <Badge variant="smoke">{dict.competitions[match.competition]}</Badge>
+                <Badge variant="smoke">
+                  {match.leagueName?.[lang] || dict.competitions[match.competition]}
+                </Badge>
               </div>
 
-              <div className="text-center lg:text-left">
+              <div className="flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
+                {match.awayTeamLogoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={match.awayTeamLogoUrl}
+                    alt=""
+                    className="h-14 w-14 object-contain"
+                  />
+                )}
                 <p className="font-display text-3xl font-extrabold uppercase tracking-wide text-white sm:text-4xl">
                   {match.awayTeam[lang]}
                 </p>
-                <p className="mt-2 text-sm text-mist">{dict.common.away}</p>
+                <p className="text-sm text-mist">{dict.common.away}</p>
               </div>
             </div>
 

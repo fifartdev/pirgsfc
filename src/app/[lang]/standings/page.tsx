@@ -94,6 +94,15 @@ export default async function StandingsPage({ params }: PageProps) {
                             <td className="px-4 py-3 tabular-nums text-white/85">{row.position}</td>
                             <td className="px-4 py-3 font-semibold text-white">
                               <span className="flex items-center gap-2">
+                                {row.logoUrl && (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={row.logoUrl}
+                                    alt=""
+                                    className="h-6 w-6 shrink-0 object-contain"
+                                    loading="lazy"
+                                  />
+                                )}
                                 {row.teamName[lang]}
                                 {row.isPyrgos && <Badge variant="crimson">PAFC</Badge>}
                               </span>

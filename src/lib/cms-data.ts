@@ -152,6 +152,45 @@ function mapNews(doc: PayloadDoc, withContent: boolean): NewsArticle {
 
 // ─── Public API ───────────────────────────────────────────────────────────
 
+/**
+ * Team-name → crest URL, built from the current season's league-table rows
+ * (the only place a rival club's logo is ever stored — see LeagueTables.ts).
+ * Keyed by both the Greek and English name so `mapMatch`'s homeTeamName/
+ * homeTeamNameEn (free text, no relationship to a club record) can look
+ * either one up regardless of which locale created the match.
+ */
+async function getCurrentSeasonLogoMap(
+  payload: NonNullable<Awaited<ReturnType<typeof getPayloadClient>>>,
+  seasonId: unknown
+): Promise<Record<string, string>> {
+  const map: Record<string, string> = {};
+  const [tablesRes, ownLogoUrl] = await Promise.all([
+    payload.find({
+      collection: "league-tables",
+      where: { season: { equals: seasonId } },
+      limit: 20,
+      depth: 1,
+    }),
+    getCmsTeamLogoUrl("pyrgos-afc-men"),
+  ]);
+  // Every department's own-side matches use the literal name "PYRGOS AFC"
+  // (see seed data / club-admin convention) regardless of which Teams record
+  // the match belongs to, so the men's team's crest doubles as the club's
+  // one shared badge here — there's no separate logo entry for Pyrgos in
+  // LeagueTables.rows (that array only holds rival clubs).
+  if (ownLogoUrl) map["PYRGOS AFC"] = ownLogoUrl;
+  for (const doc of tablesRes.docs as PayloadDoc[]) {
+    const rows = Array.isArray(doc.rows) ? (doc.rows as PayloadDoc[]) : [];
+    for (const row of rows) {
+      const url = mediaUrl(row.logo);
+      if (!url) continue;
+      if (typeof row.teamName === "string") map[row.teamName] = url;
+      if (typeof row.teamNameEn === "string") map[row.teamNameEn] = url;
+    }
+  }
+  return map;
+}
+
 /** All matches from Payload (or static fallback). */
 export async function getCmsMatches(department?: Department): Promise<Match[]> {
   if (process.env.STATIC_EXPORT === "1") {
@@ -162,15 +201,36 @@ export async function getCmsMatches(department?: Department): Promise<Match[]> {
   try {
     const payload = await getPayloadClient();
     if (!payload) throw new Error("no client");
-    const res = await payload.find({
-      collection: "matches",
-      where: { status: { not_equals: "draft" } },
-      sort: "matchDate",
-      limit: 200,
-      depth: 1,
+    // Scoped to the current season only — matches otherwise cross seasons: an
+    // old season's match left as status "scheduled" would sort ahead of the
+    // current season's real fixtures and wrongly win as "next match" (see
+    // getCmsStandings/getCurrentSeasonRosterMap for the same isCurrent lookup).
+    const seasonRes = await payload.find({
+      collection: "seasons",
+      where: { isCurrent: { equals: true } },
+      limit: 1,
     });
+    const seasonId = (seasonRes.docs[0] as PayloadDoc | undefined)?.id;
+    if (seasonId == null) throw new Error("no current season");
+    const [res, logoMap] = await Promise.all([
+      payload.find({
+        collection: "matches",
+        where: { and: [{ status: { not_equals: "draft" } }, { season: { equals: seasonId } }] },
+        sort: "matchDate",
+        limit: 200,
+        depth: 1,
+      }),
+      getCurrentSeasonLogoMap(payload, seasonId),
+    ]);
     if (!res.docs.length) throw new Error("empty");
-    const all = (res.docs as PayloadDoc[]).map(mapMatch);
+    const all = (res.docs as PayloadDoc[]).map((doc) => {
+      const match = mapMatch(doc);
+      return {
+        ...match,
+        homeTeamLogoUrl: logoMap[match.homeTeam.el] ?? logoMap[match.homeTeam.en],
+        awayTeamLogoUrl: logoMap[match.awayTeam.el] ?? logoMap[match.awayTeam.en],
+      };
+    });
     return department ? all.filter((m) => m.department === department) : all;
   } catch {
     return department
@@ -181,7 +241,11 @@ export async function getCmsMatches(department?: Department): Promise<Match[]> {
 
 export async function getCmsUpcomingMatches(department?: Department): Promise<Match[]> {
   const all = await getCmsMatches(department);
-  return all.filter((m) => m.status === "upcoming");
+  const today = new Date().toISOString().slice(0, 10);
+  // Guards against a past match left as status "scheduled" (never marked
+  // completed/postponed) permanently squatting as "next match" — see
+  // getCmsMatches' season-scoping fix above for the other half of this bug.
+  return all.filter((m) => m.status === "upcoming" && m.date >= today);
 }
 
 export async function getCmsCompletedMatches(department?: Department): Promise<Match[]> {
@@ -752,6 +816,7 @@ export interface StandingRow {
   goalDifference: number;
   points: number;
   notes?: string;
+  logoUrl?: string;
 }
 
 export interface LeagueStandings {
@@ -793,7 +858,13 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
       goalsAgainst?: number;
       points?: number;
       notes?: string;
+      logo?: unknown;
     };
+
+    // LeagueTables.rows has no logo entry for Pyrgos itself (that array only
+    // holds rival clubs) — reuse the men's team's own crest for that row,
+    // same fallback as getCurrentSeasonLogoMap above.
+    const ownLogoUrl = await getCmsTeamLogoUrl("pyrgos-afc-men");
 
     const tables: LeagueStandings[] = [];
     for (const doc of res.docs as PayloadDoc[]) {
@@ -817,6 +888,7 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
             goalDifference: goalsFor - goalsAgainst,
             points: Number(row.points ?? 0),
             notes: typeof row.notes === "string" && row.notes ? row.notes : undefined,
+            logoUrl: row.isPyrgos ? ownLogoUrl : mediaUrl(row.logo),
           };
         }
       );

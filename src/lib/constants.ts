@@ -27,6 +27,7 @@ export const NAV_ITEMS = [
   { key: "men", path: "/men" },
   { key: "women", path: "/women" },
   { key: "futsal", path: "/futsal" },
+  { key: "standings", path: "/standings" },
   { key: "academy", path: "/academy" },
   { key: "club", path: "/about" },
   { key: "contact", path: "/contact" },

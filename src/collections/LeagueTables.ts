@@ -63,6 +63,12 @@ export const LeagueTables: CollectionConfig = {
           ],
         },
         {
+          name: "logo",
+          label: "Λογότυπο / Έμβλημα",
+          type: "upload",
+          relationTo: "media",
+        },
+        {
           name: "isPyrgos",
           label: "Ο PYRGOS AFC",
           type: "checkbox",

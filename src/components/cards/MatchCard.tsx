@@ -14,20 +14,33 @@ function TeamName({
   name,
   isPyrgos,
   score,
+  logoUrl,
 }: {
   name: string;
   isPyrgos: boolean;
   score?: number;
+  logoUrl?: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span
-        className={cn(
-          "font-display text-lg font-bold uppercase tracking-wide sm:text-xl",
-          isPyrgos ? "text-crimson-bright" : "text-white"
+      <span className="flex items-center gap-2.5">
+        {logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl}
+            alt=""
+            className="h-7 w-7 shrink-0 object-contain"
+            loading="lazy"
+          />
         )}
-      >
-        {name}
+        <span
+          className={cn(
+            "font-display text-lg font-bold uppercase tracking-wide sm:text-xl",
+            isPyrgos ? "text-crimson-bright" : "text-white"
+          )}
+        >
+          {name}
+        </span>
       </span>
       {score !== undefined && (
         <span className="font-display text-2xl font-extrabold tabular-nums text-white">
@@ -88,6 +101,7 @@ export function MatchCard({ match, lang, highlight = false }: MatchCardProps) {
             name={match.homeTeam[lang]}
             isPyrgos={match.homeIsPyrgos}
             score={match.homeScore}
+            logoUrl={match.homeTeamLogoUrl}
           />
           <div className="flex items-center gap-3" aria-hidden="true">
             <span className="h-px flex-1 bg-line" />
@@ -100,6 +114,7 @@ export function MatchCard({ match, lang, highlight = false }: MatchCardProps) {
             name={match.awayTeam[lang]}
             isPyrgos={!match.homeIsPyrgos}
             score={match.awayScore}
+            logoUrl={match.awayTeamLogoUrl}
           />
         </div>
 

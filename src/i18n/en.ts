@@ -12,6 +12,7 @@ export const en: Dictionary = {
     men: "Men",
     women: "Women",
     futsal: "Futsal",
+    standings: "Standings",
     academy: "Academy",
     club: "Club",
     contact: "Contact",

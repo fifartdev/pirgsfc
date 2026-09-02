@@ -10,6 +10,7 @@ export const el = {
     men: "Άντρες",
     women: "Γυναίκες",
     futsal: "Futsal",
+    standings: "Βαθμολογία",
     academy: "Υποδομές",
     club: "Σύλλογος",
     contact: "Επικοινωνία",

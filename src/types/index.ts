@@ -60,6 +60,9 @@ export interface Match {
   matchweek?: LocalizedText;
   /** Actual competition name from Payload's Leagues collection, e.g. "Regional Men's League". */
   leagueName?: LocalizedText;
+  /** Opponent crest, resolved from the current season's league-table rows (see cms-data.ts). Undefined when no table row/logo exists for that team name. */
+  homeTeamLogoUrl?: string;
+  awayTeamLogoUrl?: string;
 }
 
 export type CalendarEventType =
