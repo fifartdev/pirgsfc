@@ -11,6 +11,7 @@ import { Users } from "./src/collections/Users";
 import { Media } from "./src/collections/Media";
 import { Seasons } from "./src/collections/Seasons";
 import { Teams } from "./src/collections/Teams";
+import { Clubs } from "./src/collections/Clubs";
 import { Leagues } from "./src/collections/Leagues";
 import { Players } from "./src/collections/Players";
 import { Rosters } from "./src/collections/Rosters";
@@ -68,6 +69,7 @@ export default buildConfig({
     Media,
     Seasons,
     Teams,
+    Clubs,
     Leagues,
     Players,
     Rosters,

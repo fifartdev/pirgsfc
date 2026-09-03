@@ -44,6 +44,7 @@ function parseRosterStats(formData: FormData) {
 const PUBLIC_PATHS = {
   seasons: [],
   teams: ["/men", "/women", "/futsal"],
+  clubs: ["/matches", "/standings", "/men", "/women", "/futsal"],
   leagues: [],
   players: ["/men", "/women", "/futsal"],
   venues: ["/matches", "/men", "/women", "/futsal"],
@@ -380,6 +381,72 @@ export async function updateLeagueAction(_prev: unknown, formData: FormData) {
   }
 }
 
+// ─── CLUBS ───────────────────────────────────────────────────────────────────
+// Rival clubs: created once here, then selected by relationship from Matches
+// (opponentClub) and Standings (rows.club) for any season — see Clubs.ts.
+
+export async function createClubAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const name = (formData.get("name") as string)?.trim();
+    if (!name) return { error: "Το όνομα είναι υποχρεωτικό." };
+
+    const slug = name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    const logoIdRaw = (formData.get("logo") as string)?.trim();
+
+    const club = await payload.create({
+      collection: "clubs",
+      data: {
+        name,
+        nameEn: formData.get("nameEn") as string,
+        slug,
+        logo: logoIdRaw ? Number(logoIdRaw) : undefined,
+        status: (formData.get("status") as string) || "active",
+      },
+    });
+    revalidatePath("/club-admin/clubs");
+    revalidatePublic("clubs");
+    return { success: true, id: club.id };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateClubAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    const name = (formData.get("name") as string)?.trim();
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    if (!name) return { error: "Το όνομα είναι υποχρεωτικό." };
+
+    const logoIdRaw = (formData.get("logo") as string)?.trim();
+
+    await payload.update({
+      collection: "clubs",
+      id,
+      data: {
+        name,
+        nameEn: formData.get("nameEn") as string,
+        logo: logoIdRaw ? Number(logoIdRaw) : null,
+        status: (formData.get("status") as string) || "active",
+      },
+    });
+    revalidatePath("/club-admin/clubs");
+    revalidatePath(`/club-admin/clubs/${id}`);
+    revalidatePublic("clubs");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
 // ─── PLAYERS ─────────────────────────────────────────────────────────────────
 
 export async function createPlayerAction(_prev: unknown, formData: FormData) {
@@ -490,35 +557,72 @@ export async function updateVenueAction(_prev: unknown, formData: FormData) {
 
 // ─── MATCHES ─────────────────────────────────────────────────────────────────
 
+// Every match is PYRGOS AFC vs one opponent — never club vs club — so exactly
+// one of the two side selects must be "PYRGOS"; the other is either a
+// registered Clubs record (its name is derived by a beforeValidate hook on
+// Matches — see Clubs.ts/Matches.ts) or manual text for a one-off opponent
+// outside the registry.
+function deriveMatchSides(
+  formData: FormData
+):
+  | { error: string }
+  | { isHomeMatch: boolean; opponentClub: number | null; homeTeamName?: string; awayTeamName?: string } {
+  const homeSelect = formData.get("homeSelect") as string;
+  const awaySelect = formData.get("awaySelect") as string;
+  const homeManual = (formData.get("homeManual") as string)?.trim();
+  const awayManual = (formData.get("awayManual") as string)?.trim();
+
+  if (!homeSelect || !awaySelect) {
+    return { error: "Επιλέξτε γηπεδούχο και φιλοξενούμενο." };
+  }
+  const homeIsPyrgos = homeSelect === "PYRGOS";
+  const awayIsPyrgos = awaySelect === "PYRGOS";
+  if (homeIsPyrgos === awayIsPyrgos) {
+    return { error: "Ακριβώς μία από τις δύο ομάδες πρέπει να είναι ο PYRGOS AFC." };
+  }
+  const isHomeMatch = homeIsPyrgos;
+  const opponentSelect = isHomeMatch ? awaySelect : homeSelect;
+  const opponentManual = isHomeMatch ? awayManual : homeManual;
+
+  if (opponentSelect === "__manual__") {
+    if (!opponentManual) return { error: "Συμπληρώστε το όνομα της αντίπαλης ομάδας." };
+    return {
+      isHomeMatch,
+      opponentClub: null,
+      homeTeamName: isHomeMatch ? "PYRGOS AFC" : opponentManual,
+      awayTeamName: isHomeMatch ? opponentManual : "PYRGOS AFC",
+    };
+  }
+  return { isHomeMatch, opponentClub: Number(opponentSelect) };
+}
+
 export async function createMatchAction(_prev: unknown, formData: FormData) {
   try {
     const { payload } = await getAuthenticatedPayload();
-    const homeTeamName = (formData.get("homeTeamName") as string)?.trim();
-    const awayTeamName = (formData.get("awayTeamName") as string)?.trim();
     const matchDate = formData.get("matchDate") as string;
-    const season = formData.get("season") as string;
-    const team = formData.get("team") as string;
-    const league = formData.get("league") as string;
-    const venue = (formData.get("venue") as string)?.trim() || undefined;
+    const seasonRaw = formData.get("season") as string;
+    const teamRaw = formData.get("team") as string;
+    const leagueRaw = formData.get("league") as string;
+    const venueRaw = (formData.get("venue") as string)?.trim();
 
-    if (!homeTeamName || !awayTeamName || !matchDate || !season || !team || !league) {
+    if (!matchDate || !seasonRaw || !teamRaw || !leagueRaw) {
       return { error: "Συμπληρώστε όλα τα υποχρεωτικά πεδία." };
     }
+    const sides = deriveMatchSides(formData);
+    if ("error" in sides) return { error: sides.error };
 
     await payload.create({
       collection: "matches",
       data: {
-        homeTeamName,
-        awayTeamName,
+        ...sides,
         matchDate,
-        season,
-        team,
-        league,
-        venue,
+        season: Number(seasonRaw),
+        team: Number(teamRaw),
+        league: Number(leagueRaw),
+        venue: venueRaw ? Number(venueRaw) : undefined,
         matchType: (formData.get("matchType") as string) || "league",
         kickoffTime: formData.get("kickoffTime") as string,
         matchweek: formData.get("matchweek") as string,
-        isHomeMatch: formData.get("isHomeMatch") === "on",
         status: (formData.get("status") as string) || "scheduled",
       },
     });
@@ -534,18 +638,18 @@ export async function updateMatchAction(_prev: unknown, formData: FormData) {
   try {
     const { payload } = await getAuthenticatedPayload();
     const id = formData.get("id") as string;
-    const homeTeamName = (formData.get("homeTeamName") as string)?.trim();
-    const awayTeamName = (formData.get("awayTeamName") as string)?.trim();
     const matchDate = formData.get("matchDate") as string;
-    const season = formData.get("season") as string;
-    const team = formData.get("team") as string;
-    const league = formData.get("league") as string;
-    const venue = (formData.get("venue") as string)?.trim() || undefined;
+    const seasonRaw = formData.get("season") as string;
+    const teamRaw = formData.get("team") as string;
+    const leagueRaw = formData.get("league") as string;
+    const venueRaw = (formData.get("venue") as string)?.trim();
 
     if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
-    if (!homeTeamName || !awayTeamName || !matchDate || !season || !team || !league) {
+    if (!matchDate || !seasonRaw || !teamRaw || !leagueRaw) {
       return { error: "Συμπληρώστε όλα τα υποχρεωτικά πεδία." };
     }
+    const sides = deriveMatchSides(formData);
+    if ("error" in sides) return { error: sides.error };
 
     const homeScoreRaw = parseInt(formData.get("homeScore") as string);
     const awayScoreRaw = parseInt(formData.get("awayScore") as string);
@@ -554,17 +658,15 @@ export async function updateMatchAction(_prev: unknown, formData: FormData) {
       collection: "matches",
       id,
       data: {
-        homeTeamName,
-        awayTeamName,
+        ...sides,
         matchDate,
-        season,
-        team,
-        league,
-        venue,
+        season: Number(seasonRaw),
+        team: Number(teamRaw),
+        league: Number(leagueRaw),
+        venue: venueRaw ? Number(venueRaw) : null,
         matchType: (formData.get("matchType") as string) || "league",
         kickoffTime: formData.get("kickoffTime") as string,
         matchweek: formData.get("matchweek") as string,
-        isHomeMatch: formData.get("isHomeMatch") === "on",
         status: (formData.get("status") as string) || "scheduled",
         homeScore: isNaN(homeScoreRaw) ? undefined : homeScoreRaw,
         awayScore: isNaN(awayScoreRaw) ? undefined : awayScoreRaw,
@@ -892,8 +994,7 @@ export async function updateNewsAction(_prev: unknown, formData: FormData) {
 // native way to carry an array of objects.
 
 interface LeagueTableRowInput {
-  teamName: string;
-  teamNameEn?: string;
+  club?: number;
   isPyrgos: boolean;
   played: number;
   won: number;
@@ -912,8 +1013,7 @@ function parseLeagueTableRows(formData: FormData): LeagueTableRowInput[] | null 
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return null;
     return parsed.map((r) => ({
-      teamName: String(r.teamName ?? "").trim(),
-      teamNameEn: r.teamNameEn ? String(r.teamNameEn).trim() : undefined,
+      club: r.club ? Number(r.club) : undefined,
       isPyrgos: Boolean(r.isPyrgos),
       played: Number(r.played) || 0,
       won: Number(r.won) || 0,
@@ -964,8 +1064,8 @@ export async function updateLeagueTableAction(_prev: unknown, formData: FormData
     }
     const rows = parseLeagueTableRows(formData);
     if (rows === null) return { error: "Μη έγκυρα δεδομένα ομάδων." };
-    if (rows.some((r) => !r.teamName)) {
-      return { error: "Κάθε ομάδα πρέπει να έχει όνομα." };
+    if (rows.some((r) => !r.isPyrgos && !r.club)) {
+      return { error: "Κάθε ομάδα (εκτός του PYRGOS AFC) πρέπει να έχει επιλεγμένο σύλλογο." };
     }
 
     await payload.update({

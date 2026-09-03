@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { FormField } from "@/components/club-admin/FormField";
+import { TeamSideField } from "@/components/club-admin/TeamSideField";
 import { updateMatchAction } from "@/lib/club-admin/actions";
 
 export interface MatchEditData {
@@ -12,6 +13,7 @@ export interface MatchEditData {
   team?: string;
   league?: string;
   venue?: string;
+  opponentClub?: string;
   homeTeamName: string;
   awayTeamName: string;
   matchType?: string;
@@ -30,10 +32,20 @@ interface Props {
   teamOptions: { value: string; label: string }[];
   leagueOptions: { value: string; label: string }[];
   venueOptions: { value: string; label: string }[];
+  clubOptions: { value: string; label: string }[];
 }
 
-export function EditMatchForm({ match, seasonOptions, teamOptions, leagueOptions, venueOptions }: Props) {
+export function EditMatchForm({ match, seasonOptions, teamOptions, leagueOptions, venueOptions, clubOptions }: Props) {
   const [state, formAction, isPending] = useActionState(updateMatchAction, null);
+
+  // Derive each side's current select value from the stored isHomeMatch +
+  // opponentClub (or fall back to "manual" using the plain-text name already
+  // on the match, for matches created before opponentClub existed).
+  const opponentDefault = match.opponentClub || "__manual__";
+  const homeDefaultSelect = match.isHomeMatch ? "PYRGOS" : opponentDefault;
+  const awayDefaultSelect = match.isHomeMatch ? opponentDefault : "PYRGOS";
+  const homeDefaultManual = !match.isHomeMatch && !match.opponentClub ? match.homeTeamName : undefined;
+  const awayDefaultManual = match.isHomeMatch && !match.opponentClub ? match.awayTeamName : undefined;
 
   return (
     <div className="max-w-2xl">
@@ -70,8 +82,22 @@ export function EditMatchForm({ match, seasonOptions, teamOptions, leagueOptions
           options={[{ value: "", label: "— Χωρίς γήπεδο —" }, ...venueOptions]}
         />
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Γηπεδούχος *" name="homeTeamName" required defaultValue={match.homeTeamName} />
-          <FormField label="Φιλοξενούμενος *" name="awayTeamName" required defaultValue={match.awayTeamName} />
+          <TeamSideField
+            label="Γηπεδούχος"
+            selectName="homeSelect"
+            manualName="homeManual"
+            clubOptions={clubOptions}
+            defaultSelectValue={homeDefaultSelect}
+            defaultManualValue={homeDefaultManual}
+          />
+          <TeamSideField
+            label="Φιλοξενούμενος"
+            selectName="awaySelect"
+            manualName="awayManual"
+            clubOptions={clubOptions}
+            defaultSelectValue={awayDefaultSelect}
+            defaultManualValue={awayDefaultManual}
+          />
         </div>
         <FormField
           label="Τύπος αγώνα"
@@ -91,7 +117,6 @@ export function EditMatchForm({ match, seasonOptions, teamOptions, leagueOptions
           <FormField label="Ώρα έναρξης" name="kickoffTime" defaultValue={match.kickoffTime} />
         </div>
         <FormField label="Αγωνιστική / Φάση" name="matchweek" defaultValue={match.matchweek} />
-        <FormField label="Εντός έδρας" name="isHomeMatch" type="checkbox" defaultValue={match.isHomeMatch} />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Γκολ γηπεδούχου" name="homeScore" type="number" min={0} defaultValue={match.homeScore} />

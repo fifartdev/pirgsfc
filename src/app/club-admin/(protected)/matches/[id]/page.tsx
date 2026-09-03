@@ -27,6 +27,7 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
       team: toRelationId(doc.team),
       league: toRelationId(doc.league),
       venue: toRelationId(doc.venue),
+      opponentClub: toRelationId(doc.opponentClub),
       homeTeamName: (doc.homeTeamName as string) ?? "",
       awayTeamName: (doc.awayTeamName as string) ?? "",
       matchType: (doc.matchType as string | undefined) ?? undefined,
@@ -42,11 +43,12 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
     notFound();
   }
 
-  const [seasonsRes, teamsRes, leaguesRes, venuesRes] = await Promise.all([
+  const [seasonsRes, teamsRes, leaguesRes, venuesRes, clubsRes] = await Promise.all([
     payload.find({ collection: "seasons", sort: "-startYear", limit: 50 }),
     payload.find({ collection: "teams", sort: "name", limit: 50 }),
     payload.find({ collection: "leagues", sort: "name", limit: 50 }),
     payload.find({ collection: "venues", sort: "name", limit: 50 }),
+    payload.find({ collection: "clubs", where: { status: { equals: "active" } }, sort: "name", limit: 200 }),
   ]);
 
   return (
@@ -56,6 +58,7 @@ export default async function EditMatchPage({ params }: { params: Promise<{ id: 
       teamOptions={toOptions(teamsRes.docs as { id: string; name: string }[], "name")}
       leagueOptions={toOptions(leaguesRes.docs as { id: string; name: string }[], "name")}
       venueOptions={toOptions(venuesRes.docs as { id: string; name: string }[], "name")}
+      clubOptions={toOptions(clubsRes.docs as { id: string; name: string }[], "name")}
     />
   );
 }

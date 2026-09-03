@@ -29,8 +29,11 @@ export default async function EditLeagueTablePage({ params }: { params: Promise<
         league != null && typeof league === "object" ? String((league as { name?: string }).name ?? "") : "",
       rows: rawRows.map(
         (r): LeagueTableRow => ({
-          teamName: (r.teamName as string) ?? "",
-          teamNameEn: (r.teamNameEn as string | undefined) ?? "",
+          club: (() => {
+            const club = r.club as { id?: string | number } | number | string | null | undefined;
+            if (club == null) return "";
+            return String(typeof club === "object" ? club.id ?? "" : club);
+          })(),
           isPyrgos: Boolean(r.isPyrgos),
           played: (r.played as number | undefined) ?? 0,
           won: (r.won as number | undefined) ?? 0,
@@ -47,9 +50,10 @@ export default async function EditLeagueTablePage({ params }: { params: Promise<
     notFound();
   }
 
-  const [seasonsRes, leaguesRes] = await Promise.all([
+  const [seasonsRes, leaguesRes, clubsRes] = await Promise.all([
     payload.find({ collection: "seasons", sort: "-startYear", limit: 50 }),
     payload.find({ collection: "leagues", sort: "name", limit: 50 }),
+    payload.find({ collection: "clubs", where: { status: { equals: "active" } }, sort: "name", limit: 200 }),
   ]);
 
   return (
@@ -57,6 +61,7 @@ export default async function EditLeagueTablePage({ params }: { params: Promise<
       table={table}
       seasonOptions={toOptions(seasonsRes.docs as { id: string; title: string }[], (d) => d.title)}
       leagueOptions={toOptions(leaguesRes.docs as { id: string; name: string }[], (d) => d.name)}
+      clubOptions={toOptions(clubsRes.docs as { id: string; name: string }[], (d) => d.name)}
     />
   );
 }

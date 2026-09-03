@@ -14,6 +14,39 @@ export const Matches: CollectionConfig = {
     update: isSuperAdminOrClubAdmin,
     delete: isSuperAdminOrClubAdmin,
   },
+  hooks: {
+    // When an opponent club is selected, derive the free-text home/away name
+    // fields from it (and from isHomeMatch) so mapMatch()/the public site
+    // keep reading the same plain-text fields as before — this is the only
+    // place PYRGOS AFC's own literal name is hardcoded, matching the
+    // convention already used everywhere else (seed data, club-admin forms).
+    beforeValidate: [
+      async ({ data, req }) => {
+        if (!data) return data;
+        const opponentClubId =
+          data.opponentClub && typeof data.opponentClub === "object"
+            ? (data.opponentClub as { id?: unknown }).id
+            : data.opponentClub;
+        if (!opponentClubId) return data;
+
+        const club = await req.payload.findByID({
+          collection: "clubs",
+          id: opponentClubId as string | number,
+        });
+        const clubName = String(club.name ?? "");
+        const clubNameEn = String(club.nameEn ?? club.name ?? "");
+        const isHome = data.isHomeMatch ?? true;
+
+        return {
+          ...data,
+          homeTeamName: isHome ? "PYRGOS AFC" : clubName,
+          awayTeamName: isHome ? clubName : "PYRGOS AFC",
+          homeTeamNameEn: isHome ? "PYRGOS AFC" : clubNameEn,
+          awayTeamNameEn: isHome ? clubNameEn : "PYRGOS AFC",
+        };
+      },
+    ],
+  },
   fields: [
     // Relationships
     {
@@ -42,6 +75,16 @@ export const Matches: CollectionConfig = {
       label: "Γήπεδο",
       type: "relationship",
       relationTo: "venues",
+    },
+    {
+      name: "opponentClub",
+      label: "Αντίπαλος σύλλογος",
+      type: "relationship",
+      relationTo: "clubs",
+      admin: {
+        description:
+          "Επιλέξτε τον αντίπαλο — συμπληρώνει αυτόματα τα ονόματα γηπεδούχου/φιλοξενούμενου παρακάτω. Αφήστε κενό για φιλικούς αγώνες εκτός μητρώου.",
+      },
     },
 
     // Match type

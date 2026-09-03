@@ -22,12 +22,14 @@ import {
   Home,
   FileText,
   Mail,
+  Flag,
 } from "lucide-react";
 
 const NAV = [
   { href: "/club-admin/dashboard", label: "Πίνακας Ελέγχου", icon: LayoutDashboard },
   { href: "/club-admin/seasons", label: "Σεζόν", icon: Calendar },
   { href: "/club-admin/teams", label: "Ομάδες", icon: Shield },
+  { href: "/club-admin/clubs", label: "Σύλλογοι", icon: Flag },
   { href: "/club-admin/leagues", label: "Διοργανώσεις", icon: Trophy },
   { href: "/club-admin/players", label: "Παίκτες", icon: Users },
   { href: "/club-admin/rosters", label: "Ρόστερ", icon: BookOpen },

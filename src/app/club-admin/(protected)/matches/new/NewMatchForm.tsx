@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { FormField } from "@/components/club-admin/FormField";
+import { TeamSideField } from "@/components/club-admin/TeamSideField";
 import { createMatchAction } from "@/lib/club-admin/actions";
 
 interface NewMatchFormProps {
@@ -12,9 +13,10 @@ interface NewMatchFormProps {
   teamOptions: { value: string; label: string }[];
   leagueOptions: { value: string; label: string }[];
   venueOptions: { value: string; label: string }[];
+  clubOptions: { value: string; label: string }[];
 }
 
-export function NewMatchForm({ seasonOptions, teamOptions, leagueOptions, venueOptions }: NewMatchFormProps) {
+export function NewMatchForm({ seasonOptions, teamOptions, leagueOptions, venueOptions, clubOptions }: NewMatchFormProps) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(createMatchAction, null);
   useEffect(() => { if (state?.success) router.push("/club-admin/matches"); }, [state, router]);
@@ -30,8 +32,8 @@ export function NewMatchForm({ seasonOptions, teamOptions, leagueOptions, venueO
         <FormField label="Διοργάνωση *" name="league" type="select" required options={leagueOptions} />
         <FormField label="Γήπεδο" name="venue" type="select" options={[{ value: "", label: "— Χωρίς γήπεδο —" }, ...venueOptions]} />
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Γηπεδούχος *" name="homeTeamName" required placeholder="π.χ. PYRGOS AFC" />
-          <FormField label="Φιλοξενούμενος *" name="awayTeamName" required placeholder="π.χ. Olympia United" />
+          <TeamSideField label="Γηπεδούχος" selectName="homeSelect" manualName="homeManual" clubOptions={clubOptions} defaultSelectValue="PYRGOS" />
+          <TeamSideField label="Φιλοξενούμενος" selectName="awaySelect" manualName="awayManual" clubOptions={clubOptions} defaultSelectValue="__manual__" />
         </div>
         <FormField label="Τύπος αγώνα" name="matchType" type="select" defaultValue="league" options={[
           { value: "league", label: "Πρωτάθλημα" },
@@ -45,7 +47,6 @@ export function NewMatchForm({ seasonOptions, teamOptions, leagueOptions, venueO
           <FormField label="Ώρα έναρξης" name="kickoffTime" placeholder="π.χ. 19:30" />
         </div>
         <FormField label="Αγωνιστική / Φάση" name="matchweek" placeholder="π.χ. 16η Αγωνιστική" />
-        <FormField label="Εντός έδρας" name="isHomeMatch" type="checkbox" defaultValue={true} />
         <FormField label="Κατάσταση" name="status" type="select" defaultValue="scheduled" options={[
           { value: "scheduled", label: "Προγραμματισμένος" },
           { value: "completed", label: "Ολοκληρώθηκε" },

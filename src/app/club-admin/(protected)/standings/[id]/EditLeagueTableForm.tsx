@@ -8,8 +8,7 @@ import { FormField } from "@/components/club-admin/FormField";
 import { updateLeagueTableAction, deleteLeagueTableAction } from "@/lib/club-admin/actions";
 
 export interface LeagueTableRow {
-  teamName: string;
-  teamNameEn: string;
+  club: string;
   isPyrgos: boolean;
   played: number;
   won: number;
@@ -33,11 +32,11 @@ interface Props {
   table: LeagueTableEditData;
   seasonOptions: { value: string; label: string }[];
   leagueOptions: { value: string; label: string }[];
+  clubOptions: { value: string; label: string }[];
 }
 
 const EMPTY_ROW: LeagueTableRow = {
-  teamName: "",
-  teamNameEn: "",
+  club: "",
   isPyrgos: false,
   played: 0,
   won: 0,
@@ -53,8 +52,10 @@ const numberInput =
   "w-16 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-center text-sm text-white focus:border-red-600/60 focus:outline-none focus:ring-1 focus:ring-red-600/40";
 const textInput =
   "w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white placeholder:text-gray-500 focus:border-red-600/60 focus:outline-none focus:ring-1 focus:ring-red-600/40";
+const selectInput =
+  "w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white focus:border-red-600/60 focus:outline-none focus:ring-1 focus:ring-red-600/40";
 
-export function EditLeagueTableForm({ table, seasonOptions, leagueOptions }: Props) {
+export function EditLeagueTableForm({ table, seasonOptions, leagueOptions, clubOptions }: Props) {
   const router = useRouter();
   const [rows, setRows] = useState<LeagueTableRow[]>(table.rows);
   const [state, formAction, isPending] = useActionState(updateLeagueTableAction, null);
@@ -158,8 +159,7 @@ export function EditLeagueTableForm({ table, seasonOptions, leagueOptions }: Pro
             <thead className="border-b border-white/10 bg-white/5">
               <tr className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 <th className="px-2 py-3 text-left">#</th>
-                <th className="min-w-[160px] px-2 py-3 text-left">Ομάδα (ελλ.)</th>
-                <th className="min-w-[140px] px-2 py-3 text-left">Ομάδα (αγγλ.)</th>
+                <th className="min-w-[200px] px-2 py-3 text-left">Σύλλογος</th>
                 <th className="px-2 py-3">PAFC</th>
                 <th className="px-2 py-3">Αγ.</th>
                 <th className="px-2 py-3">Ν</th>
@@ -175,7 +175,7 @@ export function EditLeagueTableForm({ table, seasonOptions, leagueOptions }: Pro
             <tbody className="divide-y divide-white/5 bg-white/[0.02]">
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="px-4 py-10 text-center text-gray-400">
+                  <td colSpan={12} className="px-4 py-10 text-center text-gray-400">
                     Δεν υπάρχουν ομάδες ακόμα. Πάτησε &quot;Προσθήκη ομάδας&quot;.
                   </td>
                 </tr>
@@ -184,20 +184,22 @@ export function EditLeagueTableForm({ table, seasonOptions, leagueOptions }: Pro
                   <tr key={index} className={row.isPyrgos ? "bg-red-600/5" : undefined}>
                     <td className="px-2 py-2 text-center tabular-nums text-gray-400">{index + 1}</td>
                     <td className="px-2 py-2">
-                      <input
-                        className={textInput}
-                        value={row.teamName}
-                        onChange={(e) => updateRow(index, "teamName", e.target.value)}
-                        placeholder="Όνομα ομάδας"
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      <input
-                        className={textInput}
-                        value={row.teamNameEn}
-                        onChange={(e) => updateRow(index, "teamNameEn", e.target.value)}
-                        placeholder="Team name"
-                      />
+                      {row.isPyrgos ? (
+                        <span className="font-semibold text-white">PYRGOS AFC</span>
+                      ) : (
+                        <select
+                          className={selectInput}
+                          value={row.club}
+                          onChange={(e) => updateRow(index, "club", e.target.value)}
+                        >
+                          <option value="">— Επιλογή συλλόγου —</option>
+                          {clubOptions.map((c) => (
+                            <option key={c.value} value={c.value}>
+                              {c.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="px-2 py-2 text-center">
                       <input

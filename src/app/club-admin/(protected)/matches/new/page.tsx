@@ -7,11 +7,12 @@ export const metadata: Metadata = { title: "Νέος Αγώνας" };
 export default async function NewMatchPage() {
   const { payload } = await requireClubAdmin();
 
-  const [seasonsRes, teamsRes, leaguesRes, venuesRes] = await Promise.all([
+  const [seasonsRes, teamsRes, leaguesRes, venuesRes, clubsRes] = await Promise.all([
     payload.find({ collection: "seasons", sort: "-startYear", limit: 50 }),
     payload.find({ collection: "teams", sort: "name", limit: 50 }),
     payload.find({ collection: "leagues", sort: "name", limit: 50 }),
     payload.find({ collection: "venues", sort: "name", limit: 50 }),
+    payload.find({ collection: "clubs", where: { status: { equals: "active" } }, sort: "name", limit: 200 }),
   ]);
 
   type Option = { value: string; label: string };
@@ -25,6 +26,7 @@ export default async function NewMatchPage() {
       teamOptions={toOptions(teamsRes.docs as { id: string; name: string }[], "name")}
       leagueOptions={toOptions(leaguesRes.docs as { id: string; name: string }[], "name")}
       venueOptions={toOptions(venuesRes.docs as { id: string; name: string }[], "name")}
+      clubOptions={toOptions(clubsRes.docs as { id: string; name: string }[], "name")}
     />
   );
 }

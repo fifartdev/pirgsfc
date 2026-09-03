@@ -153,39 +153,34 @@ function mapNews(doc: PayloadDoc, withContent: boolean): NewsArticle {
 // ─── Public API ───────────────────────────────────────────────────────────
 
 /**
- * Team-name → crest URL, built from the current season's league-table rows
- * (the only place a rival club's logo is ever stored — see LeagueTables.ts).
- * Keyed by both the Greek and English name so `mapMatch`'s homeTeamName/
- * homeTeamNameEn (free text, no relationship to a club record) can look
- * either one up regardless of which locale created the match.
+ * Team-name → crest URL fallback map, built from the current season's
+ * league-table rows' populated `club` relationship. Only needed for matches
+ * that predate the `opponentClub` relationship or are one-off friendlies
+ * against a club that was never added to the Clubs registry — `getCmsMatches`
+ * prefers resolving a match's own `opponentClub` directly and only falls
+ * back to this name-based lookup when that's unset.
  */
 async function getCurrentSeasonLogoMap(
   payload: NonNullable<Awaited<ReturnType<typeof getPayloadClient>>>,
   seasonId: unknown
 ): Promise<Record<string, string>> {
   const map: Record<string, string> = {};
-  const [tablesRes, ownLogoUrl] = await Promise.all([
-    payload.find({
-      collection: "league-tables",
-      where: { season: { equals: seasonId } },
-      limit: 20,
-      depth: 1,
-    }),
-    getCmsTeamLogoUrl("pyrgos-afc-men"),
-  ]);
-  // Every department's own-side matches use the literal name "PYRGOS AFC"
-  // (see seed data / club-admin convention) regardless of which Teams record
-  // the match belongs to, so the men's team's crest doubles as the club's
-  // one shared badge here — there's no separate logo entry for Pyrgos in
-  // LeagueTables.rows (that array only holds rival clubs).
-  if (ownLogoUrl) map["PYRGOS AFC"] = ownLogoUrl;
+  const tablesRes = await payload.find({
+    collection: "league-tables",
+    where: { season: { equals: seasonId } },
+    limit: 20,
+    depth: 2,
+  });
   for (const doc of tablesRes.docs as PayloadDoc[]) {
     const rows = Array.isArray(doc.rows) ? (doc.rows as PayloadDoc[]) : [];
     for (const row of rows) {
-      const url = mediaUrl(row.logo);
+      const club = row.club;
+      if (!club || typeof club !== "object") continue;
+      const c = club as PayloadDoc;
+      const url = mediaUrl(c.logo);
       if (!url) continue;
-      if (typeof row.teamName === "string") map[row.teamName] = url;
-      if (typeof row.teamNameEn === "string") map[row.teamNameEn] = url;
+      if (typeof c.name === "string") map[c.name] = url;
+      if (typeof c.nameEn === "string") map[c.nameEn] = url;
     }
   }
   return map;
@@ -212,23 +207,31 @@ export async function getCmsMatches(department?: Department): Promise<Match[]> {
     });
     const seasonId = (seasonRes.docs[0] as PayloadDoc | undefined)?.id;
     if (seasonId == null) throw new Error("no current season");
-    const [res, logoMap] = await Promise.all([
+    const [res, logoMap, ownLogoUrl] = await Promise.all([
       payload.find({
         collection: "matches",
         where: { and: [{ status: { not_equals: "draft" } }, { season: { equals: seasonId } }] },
         sort: "matchDate",
         limit: 200,
-        depth: 1,
+        depth: 2,
       }),
       getCurrentSeasonLogoMap(payload, seasonId),
+      getCmsTeamLogoUrl("pyrgos-afc-men"),
     ]);
     if (!res.docs.length) throw new Error("empty");
     const all = (res.docs as PayloadDoc[]).map((doc) => {
       const match = mapMatch(doc);
+      // Prefer the match's own opponentClub relationship (set once, reused
+      // every season); fall back to name-matching against the current
+      // standings table for older matches/one-off friendlies without one.
+      const opponentClub =
+        doc.opponentClub && typeof doc.opponentClub === "object" ? (doc.opponentClub as PayloadDoc) : undefined;
+      const opponentLogoUrl = opponentClub ? mediaUrl(opponentClub.logo) : undefined;
+      const isHome = match.homeIsPyrgos;
       return {
         ...match,
-        homeTeamLogoUrl: logoMap[match.homeTeam.el] ?? logoMap[match.homeTeam.en],
-        awayTeamLogoUrl: logoMap[match.awayTeam.el] ?? logoMap[match.awayTeam.en],
+        homeTeamLogoUrl: isHome ? ownLogoUrl : (opponentLogoUrl ?? logoMap[match.homeTeam.el] ?? logoMap[match.homeTeam.en]),
+        awayTeamLogoUrl: isHome ? (opponentLogoUrl ?? logoMap[match.awayTeam.el] ?? logoMap[match.awayTeam.en]) : ownLogoUrl,
       };
     });
     return department ? all.filter((m) => m.department === department) : all;
@@ -843,12 +846,11 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
       collection: "league-tables",
       where: { season: { equals: seasonId } },
       limit: 100,
-      depth: 1,
+      depth: 2,
     });
 
     type TableRow = {
-      teamName?: string;
-      teamNameEn?: string;
+      club?: unknown;
       isPyrgos?: boolean;
       played?: number;
       won?: number;
@@ -858,12 +860,12 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
       goalsAgainst?: number;
       points?: number;
       notes?: string;
-      logo?: unknown;
     };
 
-    // LeagueTables.rows has no logo entry for Pyrgos itself (that array only
-    // holds rival clubs) — reuse the men's team's own crest for that row,
-    // same fallback as getCurrentSeasonLogoMap above.
+    // LeagueTables.rows has no `club` entry for Pyrgos itself (that
+    // relationship only ever points at rival clubs) — reuse the men's
+    // team's own crest/name for that row, same fallback as
+    // getCurrentSeasonLogoMap above.
     const ownLogoUrl = await getCmsTeamLogoUrl("pyrgos-afc-men");
 
     const tables: LeagueStandings[] = [];
@@ -875,9 +877,13 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
         (row, index): StandingRow => {
           const goalsFor = Number(row.goalsFor ?? 0);
           const goalsAgainst = Number(row.goalsAgainst ?? 0);
+          const isPyrgos = Boolean(row.isPyrgos);
+          const club = !isPyrgos && row.club && typeof row.club === "object" ? (row.club as PayloadDoc) : undefined;
           return {
-            teamName: { el: String(row.teamName ?? ""), en: String(row.teamNameEn ?? row.teamName ?? "") },
-            isPyrgos: Boolean(row.isPyrgos),
+            teamName: isPyrgos
+              ? { el: "PYRGOS AFC", en: "PYRGOS AFC" }
+              : { el: String(club?.name ?? ""), en: String(club?.nameEn ?? club?.name ?? "") },
+            isPyrgos,
             position: index + 1,
             played: Number(row.played ?? 0),
             won: Number(row.won ?? 0),
@@ -888,7 +894,7 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
             goalDifference: goalsFor - goalsAgainst,
             points: Number(row.points ?? 0),
             notes: typeof row.notes === "string" && row.notes ? row.notes : undefined,
-            logoUrl: row.isPyrgos ? ownLogoUrl : mediaUrl(row.logo),
+            logoUrl: isPyrgos ? ownLogoUrl : mediaUrl(club?.logo),
           };
         }
       );

@@ -56,23 +56,20 @@ export const LeagueTables: CollectionConfig = {
       type: "array",
       fields: [
         {
-          type: "row",
-          fields: [
-            { name: "teamName", label: "Ομάδα (ελλ.)", type: "text", required: true },
-            { name: "teamNameEn", label: "Ομάδα (αγγλ.)", type: "text" },
-          ],
-        },
-        {
-          name: "logo",
-          label: "Λογότυπο / Έμβλημα",
-          type: "upload",
-          relationTo: "media",
-        },
-        {
           name: "isPyrgos",
           label: "Ο PYRGOS AFC",
           type: "checkbox",
           defaultValue: false,
+        },
+        {
+          name: "club",
+          label: "Σύλλογος",
+          type: "relationship",
+          relationTo: "clubs",
+          admin: {
+            description: "Υποχρεωτικό εκτός αν η σειρά αντιστοιχεί στον PYRGOS AFC.",
+            condition: (_, siblingData) => !siblingData?.isPyrgos,
+          },
         },
         {
           type: "row",
