@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUp, ArrowDown, Trash2, Plus, CheckCircle } from "lucide-react";
+import { ArrowLeft, ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
 import { FormField } from "@/components/club-admin/FormField";
 import { updateLeagueTableAction, deleteLeagueTableAction } from "@/lib/club-admin/actions";
 
@@ -60,6 +60,7 @@ export function EditLeagueTableForm({ table, seasonOptions, leagueOptions, clubO
   const [rows, setRows] = useState<LeagueTableRow[]>(table.rows);
   const [state, formAction, isPending] = useActionState(updateLeagueTableAction, null);
   const [deleting, setDeleting] = useState(false);
+  useEffect(() => { if (state?.success) router.push("/club-admin/standings"); }, [state, router]);
 
   function updateRow<K extends keyof LeagueTableRow>(index: number, key: K, value: LeagueTableRow[K]) {
     setRows((prev) => prev.map((r, i) => (i === index ? { ...r, [key]: value } : r)));
@@ -119,12 +120,6 @@ export function EditLeagueTableForm({ table, seasonOptions, leagueOptions, clubO
         </button>
       </div>
 
-      {state?.success && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg border border-green-600/30 bg-green-600/10 px-4 py-3 text-sm text-green-400">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Οι αλλαγές αποθηκεύτηκαν επιτυχώς.
-        </div>
-      )}
       {state?.error && (
         <div className="mb-6 rounded-lg border border-red-600/30 bg-red-600/10 px-4 py-3 text-sm text-red-400">
           {state.error}
@@ -268,7 +263,8 @@ export function EditLeagueTableForm({ table, seasonOptions, leagueOptions, clubO
         </div>
 
         <p className="mt-3 text-xs text-gray-500">
-          Η σειρά των ομάδων στον πίνακα καθορίζει τη θέση τους στη βαθμολογία (η πρώτη σειρά = 1η θέση).
+          Με την αποθήκευση οι ομάδες ταξινομούνται αυτόματα κατά βαθμούς (από τους περισσότερους στους λιγότερους).
+          Σε ισοβαθμία, η σειρά που ορίζετε με τα βελάκια καθορίζει ποια ομάδα είναι ψηλότερα.
         </p>
 
         <div className="mt-6 flex gap-3">

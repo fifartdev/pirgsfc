@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPayloadClient } from "@/lib/payload";
 import { LANGS } from "@/i18n";
+import { sortByPoints } from "@/lib/standings";
 
 function parseRichText(formData: FormData, key: string): unknown {
   const raw = formData.get(key);
@@ -1068,10 +1069,11 @@ export async function updateLeagueTableAction(_prev: unknown, formData: FormData
       return { error: "Κάθε ομάδα (εκτός του PYRGOS AFC) πρέπει να έχει επιλεγμένο σύλλογο." };
     }
 
+    // Persist in standings order (points desc; ties keep the arrow order).
     await payload.update({
       collection: "league-tables",
       id,
-      data: { season: Number(seasonRaw), league: Number(leagueRaw), rows },
+      data: { season: Number(seasonRaw), league: Number(leagueRaw), rows: sortByPoints(rows) },
     });
     revalidatePath("/club-admin/standings");
     revalidatePath(`/club-admin/standings/${id}`);

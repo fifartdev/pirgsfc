@@ -1,5 +1,6 @@
 import { requireClubAdmin } from "@/lib/club-admin/auth";
 import { notFound } from "next/navigation";
+import { sortByPoints } from "@/lib/standings";
 import { EditLeagueTableForm, type LeagueTableEditData, type LeagueTableRow } from "./EditLeagueTableForm";
 
 type Option = { value: string; label: string };
@@ -27,7 +28,7 @@ export default async function EditLeagueTablePage({ params }: { params: Promise<
       league: league != null ? String(typeof league === "object" ? league.id : league) : undefined,
       leagueName:
         league != null && typeof league === "object" ? String((league as { name?: string }).name ?? "") : "",
-      rows: rawRows.map(
+      rows: sortByPoints(rawRows).map(
         (r): LeagueTableRow => ({
           club: (() => {
             const club = r.club as { id?: string | number } | number | string | null | undefined;

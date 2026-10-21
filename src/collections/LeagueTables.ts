@@ -10,9 +10,10 @@ import { isSuperAdminOrClubAdmin } from "@/lib/access";
  * table can't be computed automatically — an admin enters/updates it from
  * the official league standings.
  *
- * Row order IS the standing position (1st row = 1st place) — there's no
- * separate `position` number to keep in sync; reordering rows in the admin
- * UI reorders the table.
+ * Position is derived, not stored: rows are ordered by `points` descending
+ * (sortByPoints in src/lib/standings.ts, applied on save and on display), and
+ * row order — set with the admin UI's up/down arrows — only breaks ties
+ * between teams level on points.
  */
 export const LeagueTables: CollectionConfig = {
   slug: "league-tables",

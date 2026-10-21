@@ -3,6 +3,7 @@ import { cache } from "react";
 import { getPayloadClient } from "@/lib/payload";
 import type { Department, Match, MatchStatus, Competition, NewsArticle, Player, StaffMember, PlayerStats, LocalizedText, Sponsor } from "@/types";
 import { CLUB, SOCIAL_LINKS } from "@/lib/constants";
+import { sortByPoints } from "@/lib/standings";
 import { sponsors as staticSponsors } from "@/data/sponsors";
 import { el as elDict } from "@/i18n/el";
 import { en as enDict } from "@/i18n/en";
@@ -873,7 +874,9 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
       const league = doc.league;
       if (!league || typeof league !== "object") continue;
       const l = league as PayloadDoc;
-      const rows = (Array.isArray(doc.rows) ? (doc.rows as TableRow[]) : []).map(
+      // Sorted here too (not just on save) so tables stored before points
+      // ordering existed still display highest-points-first.
+      const rows = sortByPoints(Array.isArray(doc.rows) ? (doc.rows as TableRow[]) : []).map(
         (row, index): StandingRow => {
           const goalsFor = Number(row.goalsFor ?? 0);
           const goalsAgainst = Number(row.goalsAgainst ?? 0);
