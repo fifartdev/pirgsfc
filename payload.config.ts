@@ -16,6 +16,7 @@ import { Leagues } from "./src/collections/Leagues";
 import { Players } from "./src/collections/Players";
 import { Rosters } from "./src/collections/Rosters";
 import { Venues } from "./src/collections/Venues";
+import { Events } from "./src/collections/Events";
 import { Matches } from "./src/collections/Matches";
 import { LeagueTables } from "./src/collections/LeagueTables";
 import { NewsCategories } from "./src/collections/NewsCategories";
@@ -76,6 +77,7 @@ export default buildConfig({
     Rosters,
     Venues,
     Matches,
+    Events,
     LeagueTables,
     NewsCategories,
     News,

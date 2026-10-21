@@ -302,6 +302,12 @@ Each department page (`/men`, `/women`, `/futsal`) also shows a "Season Record" 
 
 ---
 
+### Πρόγραμμα (Calendar events) — `/club-admin/events`
+
+The public `/calendar` page shows **two things merged by date**: every current-season match from **Αγώνες** (added automatically — never enter fixtures twice) and the events created here (training, recovery, media days, community and academy events). Each event has a Greek/English title, type, date, optional start/end time, location and description (English falls back to Greek when left blank). After saving you're taken back to the list.
+
+To take an event off the site — e.g. if it's cancelled — set **Κατάσταση** to **Κρυφό** instead of deleting it. Use the **Αγώνας** type only for a one-off game that isn't tracked under Αγώνες.
+
 ## 12. News (Νέα)
 
 Path: `/club-admin/news`

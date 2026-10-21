@@ -50,7 +50,8 @@ const PUBLIC_PATHS = {
   leagues: [],
   players: ["/men", "/women", "/futsal"],
   venues: ["/matches", "/men", "/women", "/futsal"],
-  matches: ["/matches", "/men", "/women", "/futsal"],
+  matches: ["/matches", "/men", "/women", "/futsal", "/calendar"],
+  events: ["/calendar"],
   news: ["", "/news"],
   staff: ["/staff"],
   rosters: ["/men", "/women", "/futsal"],
@@ -491,6 +492,56 @@ export async function createPlayerAction(_prev: unknown, formData: FormData) {
 }
 
 // ─── VENUES ──────────────────────────────────────────────────────────────────
+
+// ─── EVENTS (calendar) ─────────────────────────────────────────────────────
+
+function eventData(formData: FormData) {
+  const optional = (key: string) => field(formData, key) || undefined;
+  return {
+    title: field(formData, "title"),
+    titleEn: optional("titleEn"),
+    type: field(formData, "type") || "training",
+    date: field(formData, "date"),
+    startTime: optional("startTime"),
+    endTime: optional("endTime"),
+    location: optional("location"),
+    locationEn: optional("locationEn"),
+    description: optional("description"),
+    descriptionEn: optional("descriptionEn"),
+    status: field(formData, "status") === "draft" ? "draft" : "published",
+  } as const;
+}
+
+export async function createEventAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const data = eventData(formData);
+    if (!data.title || !data.date) return { error: "Ο τίτλος και η ημερομηνία είναι υποχρεωτικά." };
+    await payload.create({ collection: "events", data });
+    revalidatePath("/club-admin/events");
+    revalidatePublic("events");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
+
+export async function updateEventAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const id = formData.get("id") as string;
+    if (!id) return { error: "Δεν βρέθηκε αναγνωριστικό." };
+    const data = eventData(formData);
+    if (!data.title || !data.date) return { error: "Ο τίτλος και η ημερομηνία είναι υποχρεωτικά." };
+    await payload.update({ collection: "events", id, data });
+    revalidatePath("/club-admin/events");
+    revalidatePath(`/club-admin/events/${id}`);
+    revalidatePublic("events");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
+}
 
 export async function createVenueAction(_prev: unknown, formData: FormData) {
   try {

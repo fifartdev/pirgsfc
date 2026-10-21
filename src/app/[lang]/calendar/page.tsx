@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { CalendarView } from "@/components/sections/CalendarView";
-import { getEventsSorted } from "@/data/calendar";
+import { getCmsCalendarEvents } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { buildAlternates } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export default async function CalendarPage({ params }: PageProps) {
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const events = getEventsSorted();
+  const events = await getCmsCalendarEvents();
 
   return (
     <>

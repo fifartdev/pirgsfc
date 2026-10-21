@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { getPayloadClient } from "@/lib/payload";
-import type { AcademyGroup, Department, Match, MatchStatus, Competition, NewsArticle, Player, StaffMember, PlayerStats, LocalizedText, Sponsor } from "@/types";
+import type { AcademyGroup, CalendarEvent, CalendarEventType, Department, Match, MatchStatus, Competition, NewsArticle, Player, StaffMember, PlayerStats, LocalizedText, Sponsor } from "@/types";
 import { CLUB, SOCIAL_LINKS } from "@/lib/constants";
 import { sortByPoints } from "@/lib/standings";
 import { sponsors as staticSponsors } from "@/data/sponsors";
@@ -27,6 +27,7 @@ import {
 } from "@/data/players";
 import { staff as staticStaff } from "@/data/staff";
 import { academyGroups as staticAcademyGroups } from "@/data/academy";
+import { getEventsSorted as staticGetEventsSorted } from "@/data/calendar";
 import { ACADEMY_GROUP_FIELDS, ACADEMY_TEXT_KEYS, type AcademyTextKey } from "@/lib/academy-fields";
 
 // ─── Lexical → string[] ───────────────────────────────────────────────────
@@ -1340,3 +1341,73 @@ export const getCmsAcademyContent = cache(async (): Promise<AcademyContentData> 
     return fallback;
   }
 });
+
+const EVENT_TYPES: CalendarEventType[] = ["match", "training", "recovery", "media", "community", "academy"];
+
+const byDateTime = (a: CalendarEvent, b: CalendarEvent) =>
+  a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime);
+
+/** A current-season Match as a calendar entry, so fixtures never need entering twice. */
+function matchToEvent(m: Match, stadium: LocalizedText): CalendarEvent {
+  const opponent = m.homeIsPyrgos ? m.awayTeam : m.homeTeam;
+  const detail = (lang: "el" | "en") =>
+    [m.leagueName?.[lang], m.matchweek?.[lang]].filter(Boolean).join(" · ");
+  return {
+    id: `match-${m.id}`,
+    type: "match",
+    title: {
+      el: `${m.homeTeam.el} – ${m.awayTeam.el}`,
+      en: `${m.homeTeam.en} – ${m.awayTeam.en}`,
+    },
+    date: m.date,
+    startTime: m.time,
+    location: m.venue.el
+      ? m.venue
+      : m.homeIsPyrgos
+        ? stadium
+        : { el: `Έδρα: ${opponent.el}`, en: `At ${opponent.en}` },
+    description: { el: detail("el"), en: detail("en") },
+  };
+}
+
+/**
+ * /calendar entries: club-admin Events (published only) plus the current
+ * season's Matches. Falls back to the static demo list only when Payload is
+ * unreachable — once it's up, the demo events (fake, past dates) are never
+ * mixed in with real fixtures.
+ */
+export async function getCmsCalendarEvents(): Promise<CalendarEvent[]> {
+  if (process.env.STATIC_EXPORT === "1") return staticGetEventsSorted();
+  try {
+    const payload = await getPayloadClient();
+    if (!payload) throw new Error("no client");
+    const [res, matches, clubInfo] = await Promise.all([
+      payload.find({
+        collection: "events",
+        where: { status: { not_equals: "draft" } },
+        sort: "date",
+        limit: 500,
+        depth: 0,
+      }),
+      getCmsMatches(),
+      getCmsClubInfo(),
+    ]);
+    // English falls back to the Greek text when left blank.
+    const text = (el: unknown, en: unknown) => localizedField(el, en, { el: "", en: String(el ?? "") });
+    const events = (res.docs as PayloadDoc[]).map(
+      (d): CalendarEvent => ({
+        id: `event-${d.id}`,
+        type: EVENT_TYPES.includes(d.type as CalendarEventType) ? (d.type as CalendarEventType) : "training",
+        title: text(d.title, d.titleEn),
+        date: String(d.date ?? "").slice(0, 10),
+        startTime: String(d.startTime ?? ""),
+        endTime: d.endTime ? String(d.endTime) : undefined,
+        location: text(d.location, d.locationEn),
+        description: text(d.description, d.descriptionEn),
+      })
+    );
+    return [...events, ...matches.map((m) => matchToEvent(m, clubInfo.stadiumName))].sort(byDateTime);
+  } catch {
+    return staticGetEventsSorted();
+  }
+}

@@ -24,6 +24,7 @@ import {
   Mail,
   Flag,
   GraduationCap,
+  CalendarDays,
 } from "lucide-react";
 
 const NAV = [
@@ -37,6 +38,7 @@ const NAV = [
   { href: "/club-admin/venues", label: "Γήπεδα", icon: MapPin },
   { href: "/club-admin/matches", label: "Αγώνες", icon: Trophy },
   { href: "/club-admin/standings", label: "Βαθμολογία", icon: ListOrdered },
+  { href: "/club-admin/events", label: "Πρόγραμμα", icon: CalendarDays },
   { href: "/club-admin/news", label: "Νέα", icon: Newspaper },
   { href: "/club-admin/staff", label: "Προσωπικό", icon: UserCog },
   { href: "/club-admin/content/home", label: "Περιεχόμενο Αρχικής", icon: Home },
