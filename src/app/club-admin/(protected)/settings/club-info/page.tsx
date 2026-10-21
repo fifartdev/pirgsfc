@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireClubAdmin } from "@/lib/club-admin/auth";
+import { staticClubInfo } from "@/lib/cms-data";
 import { EditClubInfoForm, type ClubInfoEditData } from "./EditClubInfoForm";
 
 export const metadata: Metadata = { title: "Πληροφορίες Συλλόγου" };
@@ -26,6 +27,7 @@ export default async function ClubInfoSettingsPage() {
   const socialMedia = (doc.socialMedia as Record<string, unknown>) ?? {};
   const values = Array.isArray(doc.values) ? (doc.values as Record<string, unknown>[]) : [];
   const sponsors = Array.isArray(doc.sponsors) ? (doc.sponsors as Record<string, unknown>[]) : [];
+  const defaults = staticClubInfo();
 
   const data: ClubInfoEditData = {
     name: (doc.name as string) ?? "",
@@ -54,21 +56,42 @@ export default async function ClubInfoSettingsPage() {
     socialTiktok: (socialMedia.tiktok as string) ?? "",
     about: doc.about,
     aboutEn: doc.aboutEn,
-    values: values.map((v) => ({
-      title: (v.title as string) ?? "",
-      titleEn: (v.titleEn as string) ?? "",
-      description: (v.description as string) ?? "",
-      descriptionEn: (v.descriptionEn as string) ?? "",
-    })),
-    sponsors: sponsors.map((s) => ({
-      name: (s.name as string) ?? "",
-      tier: (s.tier as string) ?? "partner",
-      tagline: (s.tagline as string) ?? "",
-      taglineEn: (s.taglineEn as string) ?? "",
-      url: (s.url as string) ?? "",
-      logoId: mediaId(s.logo),
-      logoUrl: mediaUrl(s.logo),
-    })),
+    // While these lists are empty in Payload the public site shows built-in
+    // defaults (getCmsClubInfo's fallback) — pre-fill the form with those same
+    // defaults so the admin edits what visitors actually see, instead of an
+    // empty list that seems unrelated to the live site.
+    values: values.length
+      ? values.map((v) => ({
+          title: (v.title as string) ?? "",
+          titleEn: (v.titleEn as string) ?? "",
+          description: (v.description as string) ?? "",
+          descriptionEn: (v.descriptionEn as string) ?? "",
+        }))
+      : defaults.values.map((v) => ({
+          title: v.title.el,
+          titleEn: v.title.en,
+          description: v.description.el,
+          descriptionEn: v.description.en,
+        })),
+    sponsors: sponsors.length
+      ? sponsors.map((s) => ({
+          name: (s.name as string) ?? "",
+          tier: (s.tier as string) ?? "partner",
+          tagline: (s.tagline as string) ?? "",
+          taglineEn: (s.taglineEn as string) ?? "",
+          url: (s.url as string) ?? "",
+          logoId: mediaId(s.logo),
+          logoUrl: mediaUrl(s.logo),
+        }))
+      : defaults.sponsors.map((s) => ({
+          name: s.name,
+          tier: s.tier,
+          tagline: s.tagline.el,
+          taglineEn: s.tagline.en,
+          url: s.url ?? "",
+          logoId: undefined,
+          logoUrl: undefined,
+        })),
   };
 
   return <EditClubInfoForm data={data} />;

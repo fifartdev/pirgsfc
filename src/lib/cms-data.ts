@@ -657,7 +657,8 @@ export interface ClubInfoData {
   sponsors: Sponsor[];
 }
 
-function staticClubInfo(): ClubInfoData {
+/** Built-in content the public site falls back to while a ClubInfo field is empty. */
+export function staticClubInfo(): ClubInfoData {
   return {
     name: { el: CLUB.name, en: CLUB.name },
     shortName: CLUB.shortName,
