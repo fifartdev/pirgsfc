@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { FormField } from "@/components/club-admin/FormField";
 import { TeamSideField } from "@/components/club-admin/TeamSideField";
 import { updateMatchAction } from "@/lib/club-admin/actions";
@@ -36,7 +37,9 @@ interface Props {
 }
 
 export function EditMatchForm({ match, seasonOptions, teamOptions, leagueOptions, venueOptions, clubOptions }: Props) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(updateMatchAction, null);
+  useEffect(() => { if (state?.success) router.push("/club-admin/matches"); }, [state, router]);
 
   // Derive each side's current select value from the stored isHomeMatch +
   // opponentClub (or fall back to "manual" using the plain-text name already
@@ -56,12 +59,6 @@ export function EditMatchForm({ match, seasonOptions, teamOptions, leagueOptions
         Επεξεργασία — {match.homeTeamName} — {match.awayTeamName}
       </h1>
 
-      {state?.success && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg border border-green-600/30 bg-green-600/10 px-4 py-3 text-sm text-green-400">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Οι αλλαγές αποθηκεύτηκαν επιτυχώς.
-        </div>
-      )}
       {state?.error && (
         <div className="mb-6 rounded-lg border border-red-600/30 bg-red-600/10 px-4 py-3 text-sm text-red-400">
           {state.error}
