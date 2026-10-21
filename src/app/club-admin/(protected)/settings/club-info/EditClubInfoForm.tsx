@@ -52,6 +52,10 @@ export interface ClubInfoEditData {
   socialTiktok: string;
   about: unknown;
   aboutEn: unknown;
+  footerStatement: string;
+  footerStatementEn: string;
+  tagline: string;
+  taglineEn: string;
   values: ClubValueEdit[];
   sponsors: ClubSponsorEdit[];
 }
@@ -184,6 +188,22 @@ export function EditClubInfoForm({ data }: { data: ClubInfoEditData }) {
             <RichTextEditor name="about" label="Κείμενο (ελλ.)" defaultValue={data.about} />
             <RichTextEditor name="aboutEn" label="Κείμενο (αγγλ.)" defaultValue={data.aboutEn} />
           </div>
+        </div>
+
+        <div className={SECTION}>
+          <h2 className={SECTION_TITLE}>Footer &amp; σύνθημα</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Κείμενο footer (ελλ.)" name="footerStatement" type="textarea" defaultValue={data.footerStatement} />
+            <FormField label="Κείμενο footer (αγγλ.)" name="footerStatementEn" type="textarea" defaultValue={data.footerStatementEn} />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <FormField label="Σύνθημα (ελλ.)" name="tagline" defaultValue={data.tagline} />
+            <FormField label="Σύνθημα (αγγλ.)" name="taglineEn" defaultValue={data.taglineEn} />
+          </div>
+          <p className="mt-3 text-xs text-gray-500">
+            Το σύνθημα εμφανίζεται στο κάτω μέρος του footer και στο μενού κινητού. Η «Ίδρυση» δίπλα στο λογότυπο
+            παίρνει αυτόματα το έτος από το πεδίο «Ίδρυση (έτος)» παραπάνω.
+          </p>
         </div>
 
         <div className={SECTION}>

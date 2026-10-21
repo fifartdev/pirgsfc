@@ -20,7 +20,7 @@ export const el = {
     languageLabel: "Γλώσσα",
   },
   common: {
-    est: "Ίδρυση 2026",
+    est: "Ίδρυση",
     tagline: "Χτισμένη με Πάθος. Ταγμένη στη Δόξα.",
     readMore: "Διαβάστε Περισσότερα",
     viewAll: "Δείτε Όλα",

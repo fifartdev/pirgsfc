@@ -2,8 +2,7 @@ import { Flame, Shield, Users, Rocket } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
-import { getDict } from "@/i18n";
-import { getCmsClubInfo } from "@/lib/cms-data";
+import { getCmsClubInfo, getCmsHomeContent } from "@/lib/cms-data";
 import type { Lang } from "@/types";
 
 interface ClubValuesProps {
@@ -16,8 +15,7 @@ interface ClubValuesProps {
 const VALUE_ICONS = [Flame, Shield, Users, Rocket];
 
 export async function ClubValues({ lang }: ClubValuesProps) {
-  const dict = getDict(lang);
-  const clubInfo = await getCmsClubInfo();
+  const [clubInfo, homeContent] = await Promise.all([getCmsClubInfo(), getCmsHomeContent()]);
 
   const values = clubInfo.values.map((value, index) => ({
     icon: VALUE_ICONS[index % VALUE_ICONS.length],
@@ -33,9 +31,9 @@ export async function ClubValues({ lang }: ClubValuesProps) {
       <Container>
         <AnimatedReveal>
           <SectionHeading
-            eyebrow={dict.home.valuesEyebrow}
-            title={dict.home.valuesTitle}
-            description={dict.home.valuesText}
+            eyebrow={homeContent.valuesEyebrow[lang]}
+            title={homeContent.valuesTitle[lang]}
+            description={homeContent.valuesText[lang]}
             align="center"
           />
         </AnimatedReveal>

@@ -56,6 +56,10 @@ export default async function ClubInfoSettingsPage() {
     socialTiktok: (socialMedia.tiktok as string) ?? "",
     about: doc.about,
     aboutEn: doc.aboutEn,
+    footerStatement: (doc.footerStatement as string) || defaults.footerStatement.el,
+    footerStatementEn: (doc.footerStatementEn as string) || defaults.footerStatement.en,
+    tagline: (doc.tagline as string) || defaults.tagline.el,
+    taglineEn: (doc.taglineEn as string) || defaults.tagline.en,
     // While these lists are empty in Payload the public site shows built-in
     // defaults (getCmsClubInfo's fallback) — pre-fill the form with those same
     // defaults so the admin edits what visitors actually see, instead of an

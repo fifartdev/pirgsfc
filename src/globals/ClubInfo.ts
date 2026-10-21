@@ -78,6 +78,22 @@ export const ClubInfo: GlobalConfig = {
       label: "Σχετικά με τον σύλλογο (αγγλ.)",
       type: "richText",
     },
+    // Sitewide footer/header copy. Empty falls back to the i18n dictionary
+    // (see getCmsClubInfo).
+    {
+      type: "row",
+      fields: [
+        { name: "footerStatement", label: "Κείμενο footer (ελλ.)", type: "textarea" },
+        { name: "footerStatementEn", label: "Κείμενο footer (αγγλ.)", type: "textarea" },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        { name: "tagline", label: "Σύνθημα (ελλ.)", type: "text" },
+        { name: "taglineEn", label: "Σύνθημα (αγγλ.)", type: "text" },
+      ],
+    },
     {
       name: "values",
       label: "Αξίες συλλόγου",

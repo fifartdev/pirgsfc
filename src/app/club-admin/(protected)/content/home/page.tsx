@@ -23,6 +23,14 @@ export default async function HomeContentPage() {
     heroTitle2En: content.heroTitle2.en,
     heroText: content.heroText.el,
     heroTextEn: content.heroText.en,
+    valuesEyebrow: content.valuesEyebrow.el,
+    valuesEyebrowEn: content.valuesEyebrow.en,
+    valuesTitle: content.valuesTitle.el,
+    valuesTitleEn: content.valuesTitle.en,
+    valuesText: content.valuesText.el,
+    valuesTextEn: content.valuesText.en,
+    sponsorsTitle: content.sponsorsTitle.el,
+    sponsorsTitleEn: content.sponsorsTitle.en,
   };
 
   return <EditHomeContentForm data={data} />;

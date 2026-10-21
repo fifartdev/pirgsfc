@@ -22,7 +22,7 @@ export const en: Dictionary = {
     languageLabel: "Language",
   },
   common: {
-    est: "Est. 2026",
+    est: "Est.",
     tagline: "Built on Passion. Driven by Glory.",
     readMore: "Read More",
     viewAll: "View All",

@@ -653,6 +653,8 @@ export interface ClubInfoData {
   contactAddress: LocalizedText;
   socialLinks: { label: string; href: string }[];
   about: LocalizedText;
+  footerStatement: LocalizedText;
+  tagline: LocalizedText;
   values: { title: LocalizedText; description: LocalizedText }[];
   sponsors: Sponsor[];
 }
@@ -671,6 +673,8 @@ export function staticClubInfo(): ClubInfoData {
     contactAddress: CLUB.contact.address,
     socialLinks: SOCIAL_LINKS.map(({ label, href }) => ({ label, href })),
     about: { el: "", en: "" },
+    footerStatement: { el: elDict.footer.statement, en: enDict.footer.statement },
+    tagline: { el: elDict.common.tagline, en: enDict.common.tagline },
     values: [
       { title: { el: elDict.values.passion.title, en: enDict.values.passion.title }, description: { el: elDict.values.passion.text, en: enDict.values.passion.text } },
       { title: { el: elDict.values.discipline.title, en: enDict.values.discipline.title }, description: { el: elDict.values.discipline.text, en: enDict.values.discipline.text } },
@@ -755,6 +759,8 @@ export const getCmsClubInfo = cache(async (): Promise<ClubInfoData> => {
       },
       socialLinks: socialLinks.length ? socialLinks : fallback.socialLinks,
       about: { el: bioText(doc.about, ""), en: bioText(doc.aboutEn, "") },
+      footerStatement: localizedField(doc.footerStatement, doc.footerStatementEn, fallback.footerStatement),
+      tagline: localizedField(doc.tagline, doc.taglineEn, fallback.tagline),
       values: values.length ? values : fallback.values,
       sponsors: sponsorsFromCms.length ? sponsorsFromCms : fallback.sponsors,
     };
@@ -985,6 +991,10 @@ export interface HomeContentData {
   heroTitleAccent: LocalizedText;
   heroTitle2: LocalizedText;
   heroText: LocalizedText;
+  valuesEyebrow: LocalizedText;
+  valuesTitle: LocalizedText;
+  valuesText: LocalizedText;
+  sponsorsTitle: LocalizedText;
 }
 
 function staticHomeContent(): HomeContentData {
@@ -994,10 +1004,14 @@ function staticHomeContent(): HomeContentData {
     heroTitleAccent: { el: elDict.home.heroTitleAccent, en: enDict.home.heroTitleAccent },
     heroTitle2: { el: elDict.home.heroTitle2, en: enDict.home.heroTitle2 },
     heroText: { el: elDict.home.heroText, en: enDict.home.heroText },
+    valuesEyebrow: { el: elDict.home.valuesEyebrow, en: enDict.home.valuesEyebrow },
+    valuesTitle: { el: elDict.home.valuesTitle, en: enDict.home.valuesTitle },
+    valuesText: { el: elDict.home.valuesText, en: enDict.home.valuesText },
+    sponsorsTitle: { el: elDict.home.sponsorsTitle, en: enDict.home.sponsorsTitle },
   };
 }
 
-/** Homepage hero copy from Payload's HomeContent global. */
+/** Homepage hero copy and values/sponsors headings from Payload's HomeContent global. */
 export const getCmsHomeContent = cache(async (): Promise<HomeContentData> => {
   const fallback = staticHomeContent();
   if (process.env.STATIC_EXPORT === "1") return fallback;
@@ -1011,6 +1025,10 @@ export const getCmsHomeContent = cache(async (): Promise<HomeContentData> => {
       heroTitleAccent: localizedField(doc.heroTitleAccent, doc.heroTitleAccentEn, fallback.heroTitleAccent),
       heroTitle2: localizedField(doc.heroTitle2, doc.heroTitle2En, fallback.heroTitle2),
       heroText: localizedField(doc.heroText, doc.heroTextEn, fallback.heroText),
+      valuesEyebrow: localizedField(doc.valuesEyebrow, doc.valuesEyebrowEn, fallback.valuesEyebrow),
+      valuesTitle: localizedField(doc.valuesTitle, doc.valuesTitleEn, fallback.valuesTitle),
+      valuesText: localizedField(doc.valuesText, doc.valuesTextEn, fallback.valuesText),
+      sponsorsTitle: localizedField(doc.sponsorsTitle, doc.sponsorsTitleEn, fallback.sponsorsTitle),
     };
   } catch {
     return fallback;

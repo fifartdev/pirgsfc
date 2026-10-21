@@ -10,7 +10,7 @@ import { NAV_ITEMS, SITE_URL } from "@/lib/constants";
 import { getDict, hasLang, LANGS } from "@/i18n";
 import { localeHref } from "@/lib/utils";
 import { organizationJsonLd, stadiumJsonLd, getSeoDefaults, ogImageUrl } from "@/lib/seo";
-import { getCmsSiteSettings } from "@/lib/cms-data";
+import { getCmsClubInfo, getCmsSiteSettings } from "@/lib/cms-data";
 import "../globals.css";
 
 const manrope = Manrope({
@@ -117,7 +117,11 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
     href: localeHref(lang, item.path),
     label: dict.nav[item.key],
   }));
-  const [organizationLd, stadiumLd] = await Promise.all([organizationJsonLd(), stadiumJsonLd()]);
+  const [organizationLd, stadiumLd, clubInfo] = await Promise.all([
+    organizationJsonLd(),
+    stadiumJsonLd(),
+    getCmsClubInfo(),
+  ]);
 
   return (
     <html lang={lang} className={`${manrope.variable} ${inter.variable} h-full antialiased`}>
@@ -150,8 +154,8 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
           lang={lang}
           navEntries={navEntries}
           matchdayLabel={dict.nav.matchday}
-          estLabel={dict.common.est}
-          tagline={dict.common.tagline}
+          estLabel={`${dict.common.est} ${clubInfo.founded}`}
+          tagline={clubInfo.tagline[lang]}
           menuOpenLabel={dict.nav.menuOpen}
           menuCloseLabel={dict.nav.menuClose}
           languageLabel={dict.nav.languageLabel}

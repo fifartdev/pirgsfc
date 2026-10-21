@@ -39,11 +39,11 @@ export async function Footer({ lang }: FooterProps) {
                   Pyrgos AFC
                 </span>
                 <span className="mt-1 font-display text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-crimson-bright/90">
-                  {dict.common.est}
+                  {dict.common.est} {clubInfo.founded}
                 </span>
               </span>
             </Link>
-            <p className="mt-6 text-sm leading-relaxed text-mist">{dict.footer.statement}</p>
+            <p className="mt-6 text-sm leading-relaxed text-mist">{clubInfo.footerStatement[lang]}</p>
           </div>
 
           <nav aria-label="Footer navigation">
@@ -123,7 +123,7 @@ export async function Footer({ lang }: FooterProps) {
             © {new Date().getFullYear()} {clubInfo.name[lang]}. {dict.footer.rights}
           </p>
           <p className="font-display uppercase tracking-[0.25em] text-crimson-bright/80">
-            {dict.common.tagline}
+            {clubInfo.tagline[lang]}
           </p>
         </div>
       </Container>

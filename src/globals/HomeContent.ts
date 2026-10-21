@@ -2,11 +2,9 @@ import type { GlobalConfig } from "payload";
 import { isSuperAdminOrClubAdmin } from "@/lib/access";
 
 /**
- * Narrative copy for the homepage hero only — the rest of the homepage
- * (next match, results, departments, players, values, news, sponsors, CTA)
- * is either data-driven or shared "chrome" text edited elsewhere, per the
- * "fixed fields per page, narrative content only" scope for page-content
- * editing. Empty fields fall back to the static i18n dictionary
+ * Narrative copy for the homepage: the hero plus the club-values and sponsors
+ * section headings (the values/sponsors lists themselves are ClubInfo data).
+ * Empty fields fall back to the static i18n dictionary
  * (see getCmsHomeContent in src/lib/cms-data.ts).
  */
 export const HomeContent: GlobalConfig = {
@@ -51,6 +49,35 @@ export const HomeContent: GlobalConfig = {
       fields: [
         { name: "heroText", label: "Hero — Κείμενο (ελλ.)", type: "textarea" },
         { name: "heroTextEn", label: "Hero — Κείμενο (αγγλ.)", type: "textarea" },
+      ],
+    },
+    // Section headings only — the values/sponsors themselves live in ClubInfo.
+    {
+      type: "row",
+      fields: [
+        { name: "valuesEyebrow", label: "Αξίες — Υπότιτλος (ελλ.)", type: "text" },
+        { name: "valuesEyebrowEn", label: "Αξίες — Υπότιτλος (αγγλ.)", type: "text" },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        { name: "valuesTitle", label: "Αξίες — Τίτλος (ελλ.)", type: "text" },
+        { name: "valuesTitleEn", label: "Αξίες — Τίτλος (αγγλ.)", type: "text" },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        { name: "valuesText", label: "Αξίες — Κείμενο (ελλ.)", type: "textarea" },
+        { name: "valuesTextEn", label: "Αξίες — Κείμενο (αγγλ.)", type: "textarea" },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        { name: "sponsorsTitle", label: "Χορηγοί — Τίτλος (ελλ.)", type: "text" },
+        { name: "sponsorsTitleEn", label: "Χορηγοί — Τίτλος (αγγλ.)", type: "text" },
       ],
     },
   ],

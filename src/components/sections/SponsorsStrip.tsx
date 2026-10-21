@@ -1,7 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
-import { getDict } from "@/i18n";
-import { getCmsClubInfo } from "@/lib/cms-data";
+import { getCmsClubInfo, getCmsHomeContent } from "@/lib/cms-data";
 import type { Lang } from "@/types";
 
 interface SponsorsStripProps {
@@ -9,8 +8,7 @@ interface SponsorsStripProps {
 }
 
 export async function SponsorsStrip({ lang }: SponsorsStripProps) {
-  const dict = getDict(lang);
-  const { sponsors } = await getCmsClubInfo();
+  const [{ sponsors }, homeContent] = await Promise.all([getCmsClubInfo(), getCmsHomeContent()]);
 
   return (
     <section
@@ -23,7 +21,7 @@ export async function SponsorsStrip({ lang }: SponsorsStripProps) {
             id="sponsors-heading"
             className="text-center font-display text-xs font-bold uppercase tracking-[0.32em] text-mist"
           >
-            {dict.home.sponsorsTitle}
+            {homeContent.sponsorsTitle[lang]}
           </h2>
         </AnimatedReveal>
 
