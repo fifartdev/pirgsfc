@@ -24,6 +24,10 @@ interface HomePageProps {
   params: Promise<{ lang: string }>;
 }
 
+// Re-render hourly so date-based picks (next match, upcoming vs. past) roll
+// over on their own instead of freezing at the last build/club-admin save.
+export const revalidate = 3600;
+
 export async function generateMetadata({ params }: HomePageProps): Promise<Metadata> {
   const { lang } = await params;
   return { alternates: buildAlternates(hasLang(lang) ? lang : "el", "/") };
