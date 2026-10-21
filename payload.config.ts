@@ -88,6 +88,12 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI,
     },
+    // Schema changes go through committed migrations only (src/migrations,
+    // applied by `vercel-build`). Dev `push` would silently alter the shared
+    // database from any `npm run dev` and re-insert the batch -1 "dev" marker,
+    // which makes `payload.db.migrate()` prompt — and, with no TTY on Vercel,
+    // exit 0 *without* migrating. See AGENTS.md.
+    push: false,
   }),
 
   editor: lexicalEditor({}),

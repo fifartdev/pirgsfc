@@ -57,10 +57,8 @@ call and assume the public site will pick it up.
 
 ## Adding/changing a collection field needs a committed migration — it will not reach the database on its own
 
-`payload.config.ts`'s `postgresAdapter` has no `migrationDir` override, so
-schema sync relies entirely on Payload's `drizzle-kit push`. Push only runs
-automatically when `NODE_ENV !== "production"` — it's silently skipped on
-every Vercel build and at runtime. This means: editing a collection field in
+Schema changes reach the database **only** through committed migrations in
+`src/migrations/` (dev `push` is disabled — see below). This means: editing a collection field in
 `src/collections/*.ts` (adding, renaming, removing) changes what the *code*
 expects, but does **nothing** to the actual database schema by itself. The
 next request that touches that collection fails with a raw Postgres error
@@ -81,23 +79,28 @@ top-level `import` executed via `-r tsx/cjs`, not the CLI entrypoint). If you
 ever add a *new* migration-related npm script, wrap `scripts/migrate.ts`
 rather than the CLI bin, or you'll hit the same crash.
 
-**This database has never used tracked migrations — it's baseline is `push`.**
-`payload_migrations` has exactly one row: `{name: "dev", batch: -1}`, which is
-Payload's own marker for "schema was synced via push." Because of this, the
-*first* `npm run migrate:create` on this DB doesn't generate a small diff —
-`drizzle-kit` has no prior snapshot to compare against, so it generates a
-migration that `CREATE TABLE`s **every** collection from scratch. Running that
-file for real via `npm run migrate` would try to create tables that already
-exist and fail (or worse). **Before running `npm run migrate` on a freshly
-generated file, open it and confirm it's a small, targeted diff — if it's
-recreating tables you know already exist, stop and don't run it.** The
-`featured` field fix was applied by hand (a single `ALTER TABLE ... ADD
-COLUMN IF NOT EXISTS`) instead of through this generated file, specifically
-because of this. Establishing a real migration baseline for this project (so
-future `migrate:create` runs produce small diffs) is unsolved — flag it if
-you hit this again.
+**Baseline: `src/migrations/20261021_125412_baseline.ts` (2026-10-21).** The
+database was originally synced by dev `push` (marker row `{name: "dev",
+batch: -1}` in `payload_migrations`). Before the baseline was committed, the
+live schema was diffed against the code with drizzle-kit `pushSchema` (no
+`apply()`) — only numeric column-default formatting false positives, no real
+drift. The baseline's `up()` is a no-op when the schema already exists
+(checks `to_regclass('public.users')`) and builds everything on an empty
+database; its `down()` throws, because the generated version dropped every
+table. Its `.json` snapshot is what makes later `migrate:create` runs produce
+small diffs.
 
-**Workflow for any field change**, once a baseline exists:
+**`push: false` is set on `postgresAdapter` — keep it.** With push on, any
+`npm run dev` against the shared `DATABASE_URI` silently alters the schema
+*and* re-inserts the batch -1 "dev" marker. Whenever that marker exists,
+`payload.db.migrate()` stops at an interactive "you've run Payload in dev
+mode" prompt; with no TTY (Vercel build) that resolves to "no" and the
+process exits **0 without migrating** — the build then deploys code whose
+columns don't exist. If a "dev" row ever reappears, delete it before the next
+deploy. Still: always open a generated migration and confirm it's a small,
+targeted diff before committing it.
+
+**Workflow for any field change:**
 1. `npm run migrate:create -- <short-description>` — writes a migration file
    under `src/migrations/`. Requires `DATABASE_URI` (and `PAYLOAD_SECRET`) in
    `.env.local` pointing at the database you're diffing against (commonly the
