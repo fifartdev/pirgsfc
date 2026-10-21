@@ -6,7 +6,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedReveal } from "@/components/ui/AnimatedReveal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { academyGroups } from "@/data/academy";
+import { getCmsAcademyContent } from "@/lib/cms-data";
 import { getDict, hasLang } from "@/i18n";
 import { localeHref, buildAlternates } from "@/lib/utils";
 
@@ -17,14 +17,16 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
   const resolvedLang = hasLang(lang) ? lang : "el";
-  const dict = getDict(resolvedLang);
+  const { texts } = await getCmsAcademyContent();
+  const title = texts.title[resolvedLang];
+  const description = texts.heroText[resolvedLang];
   return {
-    title: dict.academy.title,
-    description: dict.academy.heroText,
+    title,
+    description,
     alternates: buildAlternates(resolvedLang, "/academy"),
     openGraph: {
-      title: `${dict.academy.title} | PYRGOS AFC`,
-      description: dict.academy.heroText,
+      title: `${title} | PYRGOS AFC`,
+      description,
     },
   };
 }
@@ -33,6 +35,8 @@ export default async function AcademyPage({ params }: PageProps) {
   const { lang } = await params;
   if (!hasLang(lang)) notFound();
   const dict = getDict(lang);
+  const { texts, groups } = await getCmsAcademyContent();
+  const t = (key: keyof typeof texts) => texts[key][lang];
 
   return (
     <>
@@ -42,13 +46,13 @@ export default async function AcademyPage({ params }: PageProps) {
         <Container className="relative">
           <AnimatedReveal>
             <p className="font-display text-xs font-bold uppercase tracking-[0.32em] text-crimson-bright">
-              {dict.academy.eyebrow}
+              {t("eyebrow")}
             </p>
             <h1 className="mt-4 font-display text-4xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-6xl">
-              <span className="text-gradient-crimson">{dict.academy.title}</span>
+              <span className="text-gradient-crimson">{t("title")}</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-mist sm:text-lg">
-              {dict.academy.heroText}
+              {t("heroText")}
             </p>
           </AnimatedReveal>
         </Container>
@@ -60,12 +64,12 @@ export default async function AcademyPage({ params }: PageProps) {
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <AnimatedReveal>
               <SectionHeading
-                eyebrow={dict.academy.philosophyEyebrow}
-                title={dict.academy.philosophyTitle}
+                eyebrow={t("philosophyEyebrow")}
+                title={t("philosophyTitle")}
               />
               <div className="mt-6 space-y-5 text-base leading-relaxed text-mist">
-                <p>{dict.academy.philosophy1}</p>
-                <p>{dict.academy.philosophy2}</p>
+                <p>{t("philosophy1")}</p>
+                <p>{t("philosophy2")}</p>
               </div>
             </AnimatedReveal>
             <AnimatedReveal delay={0.15}>
@@ -73,13 +77,13 @@ export default async function AcademyPage({ params }: PageProps) {
                 <div className="stadium-lights opacity-60" aria-hidden="true" />
                 <div className="relative">
                   <p className="font-display text-xs font-bold uppercase tracking-[0.28em] text-crimson-bright">
-                    {dict.academy.graduatesEyebrow}
+                    {t("graduatesEyebrow")}
                   </p>
                   <h2 className="mt-3 font-display text-2xl font-extrabold uppercase tracking-tight text-white">
-                    {dict.academy.graduatesTitle}
+                    {t("graduatesTitle")}
                   </h2>
                   <p className="mt-4 text-sm leading-relaxed text-mist">
-                    {dict.academy.graduatesText}
+                    {t("graduatesText")}
                   </p>
                   <div className="mt-6">
                     <Button href={localeHref(lang, "/men")} variant="outline" size="sm">
@@ -98,13 +102,13 @@ export default async function AcademyPage({ params }: PageProps) {
         <Container>
           <AnimatedReveal>
             <SectionHeading
-              eyebrow={dict.academy.title}
-              title={dict.academy.groupsTitle}
-              description={dict.academy.groupsText}
+              eyebrow={t("title")}
+              title={t("groupsTitle")}
+              description={t("groupsText")}
             />
           </AnimatedReveal>
           <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {academyGroups.map((group, index) => (
+            {groups.map((group, index) => (
               <AnimatedReveal key={group.id} delay={index * 0.08}>
                 <article className="glass group h-full rounded-2xl p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-crimson/30">
                   <div className="flex items-center justify-between gap-3">
@@ -152,14 +156,14 @@ export default async function AcademyPage({ params }: PageProps) {
               <BookOpen className="h-7 w-7" aria-hidden="true" />
             </span>
             <h2 className="mx-auto mt-6 max-w-2xl font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-white sm:text-4xl">
-              {dict.academy.trialsTitle}
+              {t("trialsTitle")}
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-mist">
-              {dict.academy.trialsText}
+              {t("trialsText")}
             </p>
             <div className="mt-9">
               <Button href={localeHref(lang, "/contact")} variant="crimson" size="lg">
-                {dict.academy.trialsCta}
+                {t("trialsCta")}
               </Button>
             </div>
           </AnimatedReveal>

@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { getPayloadClient } from "@/lib/payload";
-import type { Department, Match, MatchStatus, Competition, NewsArticle, Player, StaffMember, PlayerStats, LocalizedText, Sponsor } from "@/types";
+import type { AcademyGroup, Department, Match, MatchStatus, Competition, NewsArticle, Player, StaffMember, PlayerStats, LocalizedText, Sponsor } from "@/types";
 import { CLUB, SOCIAL_LINKS } from "@/lib/constants";
 import { sortByPoints } from "@/lib/standings";
 import { sponsors as staticSponsors } from "@/data/sponsors";
@@ -26,6 +26,8 @@ import {
   getRelatedPlayers as staticGetRelatedPlayers,
 } from "@/data/players";
 import { staff as staticStaff } from "@/data/staff";
+import { academyGroups as staticAcademyGroups } from "@/data/academy";
+import { ACADEMY_GROUP_FIELDS, ACADEMY_TEXT_KEYS, type AcademyTextKey } from "@/lib/academy-fields";
 
 // ─── Lexical → string[] ───────────────────────────────────────────────────
 type LexNode = { type?: string; text?: string; children?: LexNode[] };
@@ -1290,6 +1292,49 @@ export const getCmsContactContent = cache(async (): Promise<ContactContentData> 
       formText: localizedField(form.formText, form.formTextEn, fallback.formText),
       detailsEyebrow: localizedField(details.detailsEyebrow, details.detailsEyebrowEn, fallback.detailsEyebrow),
       detailsTitle: localizedField(details.detailsTitle, details.detailsTitleEn, fallback.detailsTitle),
+    };
+  } catch {
+    return fallback;
+  }
+});
+
+export interface AcademyContentData {
+  texts: Record<AcademyTextKey, LocalizedText>;
+  groups: AcademyGroup[];
+}
+
+function staticAcademyContent(): AcademyContentData {
+  return {
+    texts: Object.fromEntries(
+      ACADEMY_TEXT_KEYS.map((key) => [key, { el: elDict.academy[key], en: enDict.academy[key] }])
+    ) as Record<AcademyTextKey, LocalizedText>,
+    groups: staticAcademyGroups,
+  };
+}
+
+/** /academy copy and age groups from Payload's AcademyContent global. */
+export const getCmsAcademyContent = cache(async (): Promise<AcademyContentData> => {
+  const fallback = staticAcademyContent();
+  if (process.env.STATIC_EXPORT === "1") return fallback;
+  try {
+    const payload = await getPayloadClient();
+    if (!payload) return fallback;
+    const doc = (await payload.findGlobal({ slug: "academy-content", depth: 0 })) as PayloadDoc;
+    const groups = (Array.isArray(doc.groups) ? (doc.groups as PayloadDoc[]) : [])
+      .filter((g) => g.name)
+      .map((g, i): AcademyGroup => {
+        const group = { id: String(g.id ?? `cms-group-${i}`) } as AcademyGroup;
+        for (const { key } of ACADEMY_GROUP_FIELDS) {
+          const el = String(g[key] ?? "");
+          group[key] = { el, en: String(g[`${key}En`] || el) };
+        }
+        return group;
+      });
+    return {
+      texts: Object.fromEntries(
+        ACADEMY_TEXT_KEYS.map((key) => [key, localizedField(doc[key], doc[`${key}En`], fallback.texts[key])])
+      ) as Record<AcademyTextKey, LocalizedText>,
+      groups: groups.length ? groups : fallback.groups,
     };
   } catch {
     return fallback;

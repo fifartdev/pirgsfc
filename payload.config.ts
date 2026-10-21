@@ -29,6 +29,7 @@ import { ClubInfo } from "./src/globals/ClubInfo";
 import { SeoDefaults } from "./src/globals/SeoDefaults";
 import { HomeContent } from "./src/globals/HomeContent";
 import { AboutContent } from "./src/globals/AboutContent";
+import { AcademyContent } from "./src/globals/AcademyContent";
 import { ContactContent } from "./src/globals/ContactContent";
 
 const filename = fileURLToPath(import.meta.url);
@@ -82,7 +83,7 @@ export default buildConfig({
     StaffAssignments,
   ],
 
-  globals: [SiteSettings, ClubInfo, SeoDefaults, HomeContent, AboutContent, ContactContent],
+  globals: [SiteSettings, ClubInfo, SeoDefaults, HomeContent, AboutContent, ContactContent, AcademyContent],
 
   db: postgresAdapter({
     pool: {

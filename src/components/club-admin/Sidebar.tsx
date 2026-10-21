@@ -23,6 +23,7 @@ import {
   FileText,
   Mail,
   Flag,
+  GraduationCap,
 } from "lucide-react";
 
 const NAV = [
@@ -41,6 +42,7 @@ const NAV = [
   { href: "/club-admin/content/home", label: "Περιεχόμενο Αρχικής", icon: Home },
   { href: "/club-admin/content/about", label: "Περιεχόμενο — Σχετικά", icon: FileText },
   { href: "/club-admin/content/contact", label: "Περιεχόμενο — Επικοινωνία", icon: Mail },
+  { href: "/club-admin/content/academy", label: "Περιεχόμενο — Υποδομές", icon: GraduationCap },
   { href: "/club-admin/settings/club-info", label: "Πληροφορίες Συλλόγου", icon: Building2 },
   { href: "/club-admin/settings/seo", label: "Προεπιλογές SEO", icon: Search },
 ] as const;

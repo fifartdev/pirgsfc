@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getPayloadClient } from "@/lib/payload";
 import { LANGS } from "@/i18n";
 import { sortByPoints } from "@/lib/standings";
+import { ACADEMY_GROUP_FIELDS, ACADEMY_TEXT_KEYS } from "@/lib/academy-fields";
 
 function parseRichText(formData: FormData, key: string): unknown {
   const raw = formData.get(key);
@@ -1304,6 +1305,36 @@ interface AboutTimelineInput {
   titleEn?: string;
   text: string;
   textEn?: string;
+}
+
+export async function updateAcademyContentAction(_prev: unknown, formData: FormData) {
+  try {
+    const { payload } = await getAuthenticatedPayload();
+    const groups = parseJsonArray<Record<string, string>>(formData, "groupsJson");
+    if (groups === null) return { error: "Μη έγκυρα δεδομένα τμημάτων." };
+    if (groups.some((g) => !g.name?.trim())) return { error: "Κάθε τμήμα πρέπει να έχει όνομα." };
+
+    const data: Record<string, unknown> = {
+      groups: groups.map((g) =>
+        Object.fromEntries(
+          ACADEMY_GROUP_FIELDS.flatMap(({ key }) => [
+            [key, (g[key] ?? "").trim()],
+            [`${key}En`, (g[`${key}En`] ?? "").trim()],
+          ])
+        )
+      ),
+    };
+    for (const key of ACADEMY_TEXT_KEYS) {
+      data[key] = field(formData, key);
+      data[`${key}En`] = field(formData, `${key}En`);
+    }
+
+    await payload.updateGlobal({ slug: "academy-content", data });
+    for (const lang of LANGS) revalidatePath(`/${lang}/academy`);
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Σφάλμα αποθήκευσης." };
+  }
 }
 
 export async function updateAboutContentAction(_prev: unknown, formData: FormData) {

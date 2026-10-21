@@ -21,7 +21,7 @@
 11. [Standings (Βαθμολογία)](#11-standings-βαθμολογία)
 12. [News (Νέα)](#12-news-νέα)
 13. [Settings (Ρυθμίσεις)](#13-settings-ρυθμίσεις)
-14. [Page Content — Home/About/Contact](#14-page-content--homeaboutcontact)
+14. [Page Content — Home/About/Contact/Academy](#14-page-content--homeaboutcontactacademy)
 15. [Important Rules](#15-important-rules)
 
 ---
@@ -349,7 +349,10 @@ Three screens under the sidebar's **Πληροφορίες Συλλόγου**, *
 
 ### Πληροφορίες Συλλόγου — `/club-admin/settings/club-info`
 
-Editable by both club_admin and superadmin. Covers everything the public site's footer, About, and Contact pages read from: official name, logo, club colors, stadium info, contact details, social media links, the "About the club" rich text (Greek/English), **Αξίες συλλόγου** (club values — add/reorder/remove rows, same repeatable-row pattern as Standings), and **Χορηγοί** (sponsors — add/reorder/remove rows, each with its own logo upload).
+Editable by both club_admin and superadmin. Covers everything the public site's footer, About, and Contact pages read from: official name, logo, club colors, stadium info, contact details, social media links, the "About the club" rich text (Greek/English), the **footer text and tagline** (Greek/English), **Αξίες συλλόγου** (club values — add/reorder/remove rows, same repeatable-row pattern as Standings), and **Χορηγοί** (sponsors — add/reorder/remove rows, each with its own logo upload; the first four also appear in the footer). While values/sponsors have never been saved, the form opens pre-filled with the default ones the site shows.
+
+- **Λογότυπο / Έμβλημα is the club logo for the whole site** — header, footer, mobile menu, About page, team pages, match cards, the PYRGOS AFC row in standings, the club-admin login, and the browser-tab icon. Upload a new image and save: it appears everywhere on the next page load (browsers may keep the old tab icon a little longer). Removing it falls back to the built-in drawn crest. A team's own logo (under Ομάδες) is only used when no club logo is set. Best results: a transparent PNG, roughly portrait, at least ~400px wide.
+- **"Ίδρυση"** next to the logo takes its year from **Ίδρυση (έτος)**.
 
 ### Προεπιλογές SEO — `/club-admin/settings/seo`
 
@@ -361,17 +364,17 @@ Not shown in the sidebar for club_admin accounts, and the page itself blocks acc
 
 ---
 
-## 14. Page Content — Home/About/Contact
+## 14. Page Content — Home/About/Contact/Academy
 
-Three screens — **Περιεχόμενο Αρχικής**, **Περιεχόμενο — Σχετικά**, **Περιεχόμενο — Επικοινωνία** — for the narrative copy on the homepage, About page, and Contact page. Editable by both club_admin and superadmin.
+Four screens — **Περιεχόμενο Αρχικής**, **Περιεχόμενο — Σχετικά**, **Περιεχόμενο — Επικοινωνία**, **Περιεχόμενο — Υποδομές** — for the narrative copy on the homepage, About, Contact, and Academy pages. Editable by both club_admin and superadmin.
 
-**Scope: narrative content only, not UI chrome.** These screens cover the prose each page owns directly — hero copy, mission/story text, blurbs, the closing quote on About, department descriptions on Contact. They do **not** cover: shared section headings owned by reusable components (e.g. the "Αξίες συλλόγου"/values heading, edited under [Πληροφορίες Συλλόγου](#13-settings-ρυθμίσεις) instead), button labels, nav labels, or other chrome text — those remain fixed in the site's code.
+**Scope: narrative content only, not UI chrome.** These screens cover the prose each page owns directly — hero copy, mission/story text, blurbs, the closing quote on About, department descriptions on Contact. They do **not** cover: button labels, nav labels, or other chrome text — those remain fixed in the site's code.
 
 **Every field is optional and falls back independently.** Leave a field blank and that page keeps showing today's copy — nothing breaks, nothing goes empty. This means it's safe to fill in only the fields you actually want to change. When you open one of these screens, the form is pre-filled with whatever text is *currently live* (your own past edit, or today's default copy if you've never edited it) — not blank fields — so you're always editing the real thing.
 
 ### Περιεχόμενο Αρχικής — `/club-admin/content/home`
 
-The homepage hero only: eyebrow, two-part title (with an emphasized middle segment) and body text, in Greek and English. The rest of the homepage (next match, results, departments, players, values, news, sponsors, call-to-action) is either live data or shared content edited elsewhere.
+The homepage hero (eyebrow, two-part title with an emphasized middle segment, body text) plus the headings of the **«Αξίες»** section (eyebrow, title, text) and the **«Χορηγοί»** section, in Greek and English. The values and sponsors themselves are edited under Πληροφορίες Συλλόγου; the rest of the homepage (next match, results, departments, players, news, call-to-action) is live data.
 
 ### Περιεχόμενο — Σχετικά — `/club-admin/content/about`
 
@@ -380,6 +383,10 @@ Covers, in order: Hero, Mission (heading + 3 paragraphs), Στατιστικά (
 ### Περιεχόμενο — Επικοινωνία — `/club-admin/content/contact`
 
 Covers: Hero, the four fixed **Τμήματα Επικοινωνίας** (General/Media/Sponsorships/Academy — each with its own title, description, and contact email), and the heading text above the contact form and the "club details" list. The actual address/phone/main email/social links shown on the page come from [Πληροφορίες Συλλόγου](#13-settings-ρυθμίσεις), not from here.
+
+### Περιεχόμενο — Υποδομές — `/club-admin/content/academy`
+
+Covers the whole `/academy` page: Hero, Φιλοσοφία (heading + 2 paragraphs), Απόφοιτοι card, the heading above the age groups, and the Δοκιμαστικά & εγγραφές call-to-action (including its button text). **Τμήματα** is the list of age groups — add/reorder/remove them; each has a name (e.g. Κ19), ages, coach, training days and a description, in Greek and English. A group needs at least a Greek name to be saved.
 
 ---
 
