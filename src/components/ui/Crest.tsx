@@ -1,3 +1,7 @@
+"use client";
+
+import { createContext, useContext } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface CrestProps {
@@ -11,16 +15,43 @@ const sizeClasses = {
   lg: "h-28 w-24",
 };
 
+const imageSizes = { sm: "40px", md: "56px", lg: "96px" };
+
+const glow = "drop-shadow-[0_0_14px_rgba(195,27,27,0.45)]";
+
 /**
- * The PYRGOS AFC crest, recreated as an inline SVG so no external logo asset
- * is required: a crimson shield with a diagonal sash and the white tower
- * ("pyrgos") crowned by a flame.
+ * The club logo uploaded in ClubInfo (club-admin → Πληροφορίες Συλλόγου),
+ * provided once per layout so every <Crest /> — server- or client-rendered,
+ * including the client-only Header/MobileNav/404 — shows it without prop
+ * threading. Saving ClubInfo revalidates every public page, so a new upload
+ * shows site-wide immediately.
+ */
+const ClubLogoContext = createContext<string | undefined>(undefined);
+
+export function ClubLogoProvider({ logoUrl, children }: { logoUrl?: string; children: React.ReactNode }) {
+  return <ClubLogoContext.Provider value={logoUrl}>{children}</ClubLogoContext.Provider>;
+}
+
+/**
+ * The PYRGOS AFC crest: the uploaded club logo when there is one, otherwise
+ * this inline SVG recreation (a crimson shield with a diagonal sash and the
+ * white tower — "pyrgos" — crowned by a flame).
  */
 export function Crest({ size = "sm", className }: CrestProps) {
+  const logoUrl = useContext(ClubLogoContext);
+
+  if (logoUrl) {
+    return (
+      <span className={cn("relative block shrink-0", glow, sizeClasses[size], className)}>
+        <Image src={logoUrl} alt="" fill sizes={imageSizes[size]} className="object-contain" />
+      </span>
+    );
+  }
+
   return (
     <svg
       viewBox="0 0 100 118"
-      className={cn("shrink-0 drop-shadow-[0_0_14px_rgba(195,27,27,0.45)]", sizeClasses[size], className)}
+      className={cn("shrink-0", glow, sizeClasses[size], className)}
       aria-hidden="true"
     >
       <defs>

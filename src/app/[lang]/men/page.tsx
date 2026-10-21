@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TeamHub } from "@/components/sections/TeamHub";
 import { getDict, hasLang } from "@/i18n";
-import { getCmsMatches, getCmsTeamLogoUrl, getCmsPlayersByDepartment, getCmsTeamStats } from "@/lib/cms-data";
+import { getCmsMatches, getCmsClubLogoUrl, getCmsPlayersByDepartment, getCmsTeamStats } from "@/lib/cms-data";
 import { buildAlternates } from "@/lib/utils";
 
 interface PageProps {
@@ -33,7 +33,7 @@ export default async function MenPage({ params }: PageProps) {
   const [titleWord, ...rest] = dict.teams.menTitle.split(" ");
   const [matches, logoUrl, players, stats] = await Promise.all([
     getCmsMatches("men"),
-    getCmsTeamLogoUrl("pyrgos-afc-men"),
+    getCmsClubLogoUrl("pyrgos-afc-men"),
     getCmsPlayersByDepartment("men"),
     getCmsTeamStats("men"),
   ]);

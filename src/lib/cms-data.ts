@@ -217,7 +217,7 @@ export async function getCmsMatches(department?: Department): Promise<Match[]> {
         depth: 2,
       }),
       getCurrentSeasonLogoMap(payload, seasonId),
-      getCmsTeamLogoUrl("pyrgos-afc-men"),
+      getCmsClubLogoUrl("pyrgos-afc-men"),
     ]);
     if (!res.docs.length) throw new Error("empty");
     const all = (res.docs as PayloadDoc[]).map((doc) => {
@@ -325,6 +325,16 @@ export async function getCmsRelatedArticles(slug: string, count = 3): Promise<Ne
   // Simple: return other recent articles excluding the current one
   const articles = await getCmsNewsArticles();
   return articles.filter((a) => a.slug !== slug).slice(0, count);
+}
+
+/**
+ * PYRGOS AFC's own logo wherever the site shows it (team pages, match cards,
+ * standings): the single club logo from ClubInfo first, so one upload in
+ * club-admin changes it everywhere; a team's own logo only as a fallback.
+ */
+export async function getCmsClubLogoUrl(teamSlug: string): Promise<string | undefined> {
+  const { logoUrl } = await getCmsClubInfo();
+  return logoUrl ?? (await getCmsTeamLogoUrl(teamSlug));
 }
 
 /** Logo URL for a team by its slug (e.g. "pyrgos-afc-men"). */
@@ -645,6 +655,8 @@ export interface ClubInfoData {
   name: LocalizedText;
   shortName: string;
   founded: number;
+  /** Uploaded club logo (ClubInfo.logo); undefined → the inline SVG crest. */
+  logoUrl?: string;
   stadiumName: LocalizedText;
   stadiumCapacity: string;
   stadiumOpened: number;
@@ -740,6 +752,7 @@ export const getCmsClubInfo = cache(async (): Promise<ClubInfoData> => {
         en: typeof doc.nameEn === "string" && doc.nameEn ? doc.nameEn : fallback.name.en,
       },
       shortName: typeof doc.shortName === "string" && doc.shortName ? doc.shortName : fallback.shortName,
+      logoUrl: mediaUrl(doc.logo),
       founded: typeof doc.founded === "number" ? doc.founded : fallback.founded,
       stadiumName: {
         el: typeof stadium.name === "string" && stadium.name ? stadium.name : fallback.stadiumName.el,
@@ -874,7 +887,7 @@ export async function getCmsStandings(): Promise<LeagueStandings[]> {
     // relationship only ever points at rival clubs) — reuse the men's
     // team's own crest/name for that row, same fallback as
     // getCurrentSeasonLogoMap above.
-    const ownLogoUrl = await getCmsTeamLogoUrl("pyrgos-afc-men");
+    const ownLogoUrl = await getCmsClubLogoUrl("pyrgos-afc-men");
 
     const tables: LeagueStandings[] = [];
     for (const doc of res.docs as PayloadDoc[]) {

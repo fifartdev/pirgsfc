@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CookieBanner } from "@/components/layout/CookieBanner";
-import { Crest } from "@/components/ui/Crest";
+import { Crest, ClubLogoProvider } from "@/components/ui/Crest";
 import { NAV_ITEMS, SITE_URL } from "@/lib/constants";
 import { getDict, hasLang, LANGS } from "@/i18n";
 import { localeHref } from "@/lib/utils";
@@ -41,10 +41,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   const dict = getDict(hasLang(lang) ? lang : "el");
-  const seoDefaults = await getSeoDefaults();
+  const [seoDefaults, clubInfo] = await Promise.all([getSeoDefaults(), getCmsClubInfo()]);
   const defaultOgImage = ogImageUrl(seoDefaults?.defaultOgImage);
+  // Browser-tab icon follows the uploaded club logo; /icon.svg (public/) is
+  // the fallback. Must stay metadata-driven — an app/icon.* file would take
+  // priority over this and pin the icon to a static asset.
+  const icon = clubInfo.logoUrl ?? "/icon.svg";
   return {
     metadataBase: new URL(SITE_URL),
+    icons: { icon, apple: icon },
     title: {
       default: dict.meta.siteTitle,
       template: "%s | PYRGOS AFC",
@@ -82,7 +87,7 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
   if (!hasLang(lang)) notFound();
 
   const dict = getDict(lang);
-  const siteSettings = await getCmsSiteSettings();
+  const [siteSettings, clubInfo] = await Promise.all([getCmsSiteSettings(), getCmsClubInfo()]);
 
   // English disabled: bounce every /en/* request to the Greek homepage.
   // Layouts don't have access to the full matched sub-path (only middleware
@@ -101,7 +106,9 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
     return (
       <html lang={lang} className={`${manrope.variable} ${inter.variable} h-full antialiased`}>
         <body className="flex min-h-full flex-col items-center justify-center gap-6 bg-night px-4 text-center">
-          <Crest size="lg" />
+          <ClubLogoProvider logoUrl={clubInfo.logoUrl}>
+            <Crest size="lg" />
+          </ClubLogoProvider>
           <div>
             <h1 className="font-display text-2xl font-extrabold uppercase tracking-wide text-white">
               {dict.maintenance.title}
@@ -117,11 +124,7 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
     href: localeHref(lang, item.path),
     label: dict.nav[item.key],
   }));
-  const [organizationLd, stadiumLd, clubInfo] = await Promise.all([
-    organizationJsonLd(),
-    stadiumJsonLd(),
-    getCmsClubInfo(),
-  ]);
+  const [organizationLd, stadiumLd] = await Promise.all([organizationJsonLd(), stadiumJsonLd()]);
 
   return (
     <html lang={lang} className={`${manrope.variable} ${inter.variable} h-full antialiased`}>
@@ -150,25 +153,27 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
         )}
       </head>
       <body className="flex min-h-full flex-col bg-night">
-        <Header
-          lang={lang}
-          navEntries={navEntries}
-          matchdayLabel={dict.nav.matchday}
-          estLabel={`${dict.common.est} ${clubInfo.founded}`}
-          tagline={clubInfo.tagline[lang]}
-          menuOpenLabel={dict.nav.menuOpen}
-          menuCloseLabel={dict.nav.menuClose}
-          languageLabel={dict.nav.languageLabel}
-          announcement={
-            siteSettings.announcementBarEnabled ? siteSettings.announcementBar : undefined
-          }
-          showLanguageSwitch={siteSettings.bilingualEnabled}
-        />
-        <main className="flex-1">{children}</main>
-        <Footer lang={lang} />
-        {siteSettings.cookieBannerEnabled && (
-          <CookieBanner message={dict.cookieBanner.message} acceptLabel={dict.cookieBanner.accept} />
-        )}
+        <ClubLogoProvider logoUrl={clubInfo.logoUrl}>
+          <Header
+            lang={lang}
+            navEntries={navEntries}
+            matchdayLabel={dict.nav.matchday}
+            estLabel={`${dict.common.est} ${clubInfo.founded}`}
+            tagline={clubInfo.tagline[lang]}
+            menuOpenLabel={dict.nav.menuOpen}
+            menuCloseLabel={dict.nav.menuClose}
+            languageLabel={dict.nav.languageLabel}
+            announcement={
+              siteSettings.announcementBarEnabled ? siteSettings.announcementBar : undefined
+            }
+            showLanguageSwitch={siteSettings.bilingualEnabled}
+          />
+          <main className="flex-1">{children}</main>
+          <Footer lang={lang} />
+          {siteSettings.cookieBannerEnabled && (
+            <CookieBanner message={dict.cookieBanner.message} acceptLabel={dict.cookieBanner.accept} />
+          )}
+        </ClubLogoProvider>
       </body>
     </html>
   );
