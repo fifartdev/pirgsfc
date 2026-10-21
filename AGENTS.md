@@ -100,6 +100,15 @@ columns don't exist. If a "dev" row ever reappears, delete it before the next
 deploy. Still: always open a generated migration and confirm it's a small,
 targeted diff before committing it.
 
+**Fix the generated import line in every new migration.** `migrate:create`
+writes `import { MigrateUpArgs, MigrateDownArgs, sql } from
+'@payloadcms/db-postgres'`. Payload loads migration files with a native
+`import()` (Node's built-in type stripping, not tsx), so those type names are
+treated as value imports and the run dies with `does not provide an export
+named 'MigrateDownArgs'`. Change it to `import { type MigrateUpArgs, type
+MigrateDownArgs, sql } ...` before committing — `vercel-build` would
+otherwise fail at `migrate:deploy`.
+
 **Workflow for any field change:**
 1. `npm run migrate:create -- <short-description>` — writes a migration file
    under `src/migrations/`. Requires `DATABASE_URI` (and `PAYLOAD_SECRET`) in
