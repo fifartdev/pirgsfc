@@ -1143,7 +1143,11 @@ export async function updateLeagueTableAction(_prev: unknown, formData: FormData
 // under each locale's root layout rather than a hand-picked path list.
 
 function revalidateEverything() {
-  for (const lang of LANGS) revalidatePath(`/${lang}`, "layout");
+  // With type "layout", Next matches the *route pattern* (the layout file's
+  // segment path), not a URL: "/[lang]" covers every page under /el and /en.
+  // A literal "/el" + "layout" matches no layout file and silently does
+  // nothing — which is how these saves once failed to reach the public site.
+  revalidatePath("/[lang]", "layout");
 }
 
 function parseJsonArray<T>(formData: FormData, key: string): T[] | null {

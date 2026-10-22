@@ -55,6 +55,14 @@ which revalidates every public path in `PUBLIC_PATHS` for both locales (`el`,
 `PUBLIC_PATHS`** — don't just add a new `revalidatePath("/club-admin/...")`
 call and assume the public site will pick it up.
 
+**`revalidatePath(path, "layout")` takes a route *pattern*, not a URL.** To
+refresh every public page use `revalidatePath("/[lang]", "layout")` (what
+`revalidateEverything()` does). `revalidatePath("/el", "layout")` matches no
+layout file and is a silent no-op — every ClubInfo/HomeContent/AboutContent/
+ContactContent/SEO/SiteSettings save was invisible on the public site until
+the next deploy because of exactly this. Literal URLs (`/el/standings`) are
+fine *without* a type, which is what `revalidatePublic()` passes.
+
 ## Adding/changing a collection field needs a committed migration — it will not reach the database on its own
 
 Schema changes reach the database **only** through committed migrations in
